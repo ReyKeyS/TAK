@@ -15,10 +15,19 @@ namespace TAK
         Button[,] map = new Button[6, 6];
         List<Button>[,] board = new List<Button>[6, 6];
 
-        int player1_stones = 30;
-        int player2_stones = 30;
-        int player1_capstones = 1;
-        int player2_capstones = 1;
+        int whosTurn = 1;
+
+        Color p1_color = Color.LightCoral;
+        int p1_stones = 30;
+        int p1_capstones = 1;
+        bool p1_stand = false;
+        bool p1_caps = false;
+
+        Color p2_color = Color.DeepSkyBlue;
+        int p2_stones = 30;
+        int p2_capstones = 1;
+        bool p2_stand = false;
+        bool p2_caps = false;
 
         public Form1()
         {
@@ -39,6 +48,7 @@ namespace TAK
                     temp.Size = new Size(90, 90);
                     temp.Location = new Point((x * 99)+6, (y * 99)+6);
                     temp.BackColor = Color.White;
+                    temp.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
                     temp.Click += btn_Click;
 
                     map[y, x] = temp;
@@ -62,12 +72,25 @@ namespace TAK
             }
         }
 
-        public void add_stone(int x, int y)
+        public void add_stone(int y, int x)
         {
             //board[y, x].Add();
 
-            map[y, x].BackColor = Color.Cyan;
+            
+            if (whosTurn == 1)
+            {
+                map[y, x].BackColor = p1_color;
+                whosTurn = 2;
+            }
+            else if (whosTurn == 2)
+            {
+                map[y, x].BackColor = p2_color;
+                whosTurn = 1;
+            }
+
+
             map[y, x].Text = board[y, x].Count.ToString();
+            lblWhosTurn.Text = "Player " + whosTurn;
         }
     }
 }
