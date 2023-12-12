@@ -150,6 +150,7 @@ namespace TAK
                     else MessageBox.Show("Not Yours");
                 }
             }
+            CheckWinning();
         }
 
         public void Add_Stone(int y, int x)
@@ -215,7 +216,6 @@ namespace TAK
                 if (y == y_pivot + 1 && x == x_pivot) direction = "down";
                 if (y == y_pivot && x == x_pivot - 1) direction = "left";
                 if (y == y_pivot && x == x_pivot + 1) direction = "right";
-                MessageBox.Show(direction);
                 y_pivot = y; x_pivot = x;
 
                 // Reset & Moved All
@@ -252,6 +252,11 @@ namespace TAK
             }
 
             return false;
+        }
+
+        public void CheckWinning()
+        {
+            
         }
     }
 }
