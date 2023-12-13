@@ -42,9 +42,11 @@ namespace TAK
         public Form1()
         {
             InitializeComponent();
+
+            Initializing();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        public void Initializing()
         {
             // Initialize Map
             earlyStep_p1 = true;
@@ -59,17 +61,17 @@ namespace TAK
             direction = "";
             whosTurn = 1;
             //// Player 1
-                p1_color = Color.LightCoral;
-                p1_stones = 30;
-                p1_capstones = 1;
-                p1_stand = false;
-                p1_caps = false;
+            p1_color = Color.LightCoral;
+            p1_stones = 30;
+            p1_capstones = 1;
+            p1_stand = false;
+            p1_caps = false;
             //// Player 2
-                p2_color = Color.DeepSkyBlue;
-                p2_stones = 30;
-                p2_capstones = 1;
-                p2_stand = false;
-                p2_caps = false;
+            p2_color = Color.DeepSkyBlue;
+            p2_stones = 30;
+            p2_capstones = 1;
+            p2_stand = false;
+            p2_caps = false;
         }
 
         public void GenerateMap()
@@ -256,7 +258,55 @@ namespace TAK
 
         public void CheckWinning()
         {
-            
+            bool win = false;
+            // Rows & Columns
+            if (CheckAllCond(p1_color)) { MessageBox.Show("Player 1 Win"); win = true; }
+            else if (CheckAllCond(p2_color)) { MessageBox.Show("Player 2 Win"); win = true; }
+
+            if (win)
+            {
+                DialogResult result = MessageBox.Show("Try Again?", "Alert", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (result == DialogResult.Yes)
+                {
+                    this.Hide();
+                    Form1 f = new Form1();
+                    f.ShowDialog();
+                    this.Close();
+                }
+                else if (result == DialogResult.No)
+                {
+                    this.Close();
+                }
+            }
+        }
+
+        public bool CheckAllCond(Color color)
+        {
+            return CheckRows(color) || CheckCols(color);
+        }
+
+        public bool CheckRows(Color color)
+        {
+            for (int y = 0; y < 6; y++)
+            {
+                if (map[y, 0].BackColor == color && map[y, 1].BackColor == color && map[y, 2].BackColor == color && map[y, 3].BackColor == color && map[y, 4].BackColor == color && map[y, 5].BackColor == color)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool CheckCols(Color color)
+        {
+            for (int x = 0; x < 6; x++)
+            {
+                if (map[0, x].BackColor == color && map[1, x].BackColor == color && map[2, x].BackColor == color && map[3, x].BackColor == color && map[4, x].BackColor == color && map[5, x].BackColor == color)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
