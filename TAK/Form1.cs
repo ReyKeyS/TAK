@@ -143,7 +143,7 @@ namespace TAK
                             // Show Stacked Stone
                             btnPicked.Add(new Button());
                             btnPicked[btnPicked.Count - 1].Size = new Size(75, 25);
-                            btnPicked[btnPicked.Count - 1].Location = (whosTurn == 1) ? new Point(54, 111 - (i * 15)) : new Point(831, 111 - (i * 15));
+                            btnPicked[btnPicked.Count - 1].Location = (whosTurn == 1) ? new Point(54, 290 - (i * 15)) : new Point(831, 290 - (i * 15));
                             btnPicked[btnPicked.Count - 1].BackColor = (picked[picked.Count - 1].Player == 1) ? p1_color : p2_color;
                             this.Controls.Add(btnPicked[btnPicked.Count - 1]);
                         }
@@ -155,12 +155,14 @@ namespace TAK
                         map[y, x].Text = "";
                         map[y, x].BackColor = Color.White;
                         board[y, x].Clear();
+                        // Reset btn Stand Stone
                         if (map[y, x].Size.Height != 90)
                         {
                             map[y, x].Size = new Size(90, 90);
                             map[y, x].Location = new Point(map[y, x].Location.X, map[y, x].Location.Y - 20);
                         }
-
+                        // Reset btn Capstone
+                        if (map[y, x].FlatStyle == FlatStyle.Flat) map[y, x].FlatStyle = FlatStyle.Standard;
                     }
                     else MessageBox.Show("Not Yours");
                 }
@@ -329,11 +331,20 @@ namespace TAK
                 map[y, x].Size = new Size(90, 90);
                 map[y, x].Location = new Point(map[y, x].Location.X, map[y, x].Location.Y - 20);
             }
+            if (map[y, x].FlatStyle == FlatStyle.Flat) map[y, x].FlatStyle = FlatStyle.Standard;
 
+            // Set Button by the type
             if (current.Stand)
             {
                 map[y, x].Size = new Size(90, 50);
                 map[y, x].Location = new Point(map[y, x].Location.X, map[y, x].Location.Y + 20);
+            }
+
+            if (current.Caps)
+            {
+                map[y, x].FlatStyle = FlatStyle.Flat;
+                map[y, x].FlatAppearance.BorderColor = Color.Black;
+                map[y, x].FlatAppearance.BorderSize = 6;
             }
         }
 
