@@ -60,18 +60,26 @@ namespace TAK
             x_pivot = -1;
             direction = "";
             whosTurn = 1;
+            button_stone_p1.Size = new Size(85, 85);
+            button_stone_p1.Location = new Point(button_stone_p1.Location.X - 5, button_stone_p1.Location.Y - 5);
+            button_stone_p1.Font = new Font("Microsoft Sans Serif", 26F);
+            button_stone_p2.Font = new Font("Microsoft Sans Serif", 21F);
+            button_stone_p2.Enabled = false;
+            button_caps_p2.Enabled = false;
             //// Player 1
             p1_color = Color.LightCoral;
             p1_stones = 30;
             p1_capstones = 1;
             p1_stand = false;
             p1_caps = false;
+            p1_status.Text = "Stone";
             //// Player 2
             p2_color = Color.DeepSkyBlue;
             p2_stones = 30;
             p2_capstones = 1;
             p2_stand = false;
             p2_caps = false;
+            p2_status.Text = "Stone";
         }
 
         public void GenerateMap()
@@ -88,7 +96,7 @@ namespace TAK
                     temp.Size = new Size(90, 90);
                     temp.Location = new Point((x * 99)+6, (y * 99)+6);
                     temp.BackColor = Color.White;
-                    temp.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                    temp.Font = new Font("Microsoft Sans Serif", 20.25F);
                     temp.Click += Btn_Click;
 
                     map[y, x] = temp;
@@ -123,7 +131,7 @@ namespace TAK
                 }
                 else
                 {
-                    if (board[y, x][board[y, x].Count - 1].Player == whosTurn)
+                    if (board[y, x][board[y, x].Count - 1].Player == whosTurn && !earlyStep_p1 && !earlyStep_p2)
                     {
                         btnPicked = new List<Button>();
                         // Get Stacked Stone
@@ -157,11 +165,10 @@ namespace TAK
 
         public void Add_Stone(int y, int x)
         {
-            board[y, x].Add(new Stone(whosTurn, false, false));
-            
             if (whosTurn == 1)
             {
                 if (earlyStep_p1) {
+                    board[y, x].Add(new Stone(whosTurn, false, false));
                     board[y, x][board[y, x].Count - 1].Player = 2;
                     map[y, x].BackColor = p2_color;
                     earlyStep_p1 = false;
@@ -170,16 +177,22 @@ namespace TAK
                 }
                 else
                 {
+                    if (p1_stand)       board[y, x].Add(new Stone(whosTurn, true, false));
+                    else if (p1_caps)   board[y, x].Add(new Stone(whosTurn, false, true));
+                    else                board[y, x].Add(new Stone(whosTurn, false, false));
+
                     map[y, x].BackColor = p1_color;
                     p1_stones--;
                     button_stone_p1.Text = p1_stones.ToString();
-                }                
-                whosTurn = 2;
+                }
+
+                change_Turn();
             }
             else if (whosTurn == 2)
             {
                 if (earlyStep_p2)
                 {
+                    board[y, x].Add(new Stone(whosTurn, false, false));
                     board[y, x][board[y, x].Count - 1].Player = 1;
                     map[y, x].BackColor = p1_color;
                     earlyStep_p2 = false;
@@ -188,11 +201,16 @@ namespace TAK
                 }
                 else
                 {
+                    if (p2_stand)       board[y, x].Add(new Stone(whosTurn, true, false));
+                    else if (p2_caps)   board[y, x].Add(new Stone(whosTurn, false, true));
+                    else                board[y, x].Add(new Stone(whosTurn, false, false));
+
                     map[y, x].BackColor = p2_color;
                     p2_stones--;
                     button_stone_p2.Text = p2_stones.ToString();
                 }
-                whosTurn = 1;
+
+                change_Turn();
             }
 
             map[y, x].Text = board[y, x].Count.ToString();
@@ -226,8 +244,7 @@ namespace TAK
                     pickedUp = false;
                     y_pivot = -1; x_pivot = -1;
 
-                    if (direction != "")
-                        whosTurn = (whosTurn == 1) ? 2 : 1;
+                    if (direction != "") change_Turn();
 
                     direction = "";
                     lblWhosTurn.Text = "Player " + whosTurn;
@@ -255,6 +272,179 @@ namespace TAK
 
             return false;
         }
+
+
+        public void change_Turn()
+        {
+            if (whosTurn == 1)
+            {
+                whosTurn = 2;
+                // Tampilan Button
+                button_stone_p1.Font = new Font("Microsoft Sans Serif", 21F);
+                button_stone_p1.Size = new Size(75, 75);
+                button_stone_p1.Location = new Point(button_stone_p1.Location.X + 5, button_stone_p1.Location.Y + 5);
+                button_stone_p1.Enabled = false;
+                button_caps_p1.Enabled = false;
+                button_stone_p2.Font = new Font("Microsoft Sans Serif", 26F);
+                button_stone_p2.Size = new Size(85, 85);
+                button_stone_p2.Location = new Point(button_stone_p2.Location.X - 5, button_stone_p2.Location.Y - 5);
+                button_stone_p2.Enabled = true;
+                button_caps_p2.Enabled = true;
+                if (p1_stand)
+                {
+                    p1_stand = false;
+                    button_stone_p1.Size = new Size(75, 75);
+                    button_stone_p1.Location = new Point(button_stone_p1.Location.X, button_stone_p1.Location.Y - 15);
+                    button_caps_p1.Enabled = true;
+                    p1_status.Text = "Stone";
+                }
+                if (p1_caps)
+                {
+                    p1_caps = false;
+                    button_caps_p1.Size = new Size(75, 75);
+                    button_caps_p1.Location = new Point(button_caps_p1.Location.X + 5, button_caps_p1.Location.Y + 5);
+                    button_stone_p1.Size = new Size(75, 75);
+                    button_stone_p1.Location = new Point(button_stone_p1.Location.X - 5, button_stone_p1.Location.Y - 5);
+                    p1_status.Text = "Stone";
+                }
+            }
+            else if (whosTurn == 2)
+            {
+                whosTurn = 1;
+                // Tampilan Button
+                button_stone_p1.Font = new Font("Microsoft Sans Serif", 26F);
+                button_stone_p1.Size = new Size(85, 85);
+                button_stone_p1.Location = new Point(button_stone_p1.Location.X - 5, button_stone_p1.Location.Y - 5);
+                button_stone_p1.Enabled = true;
+                button_caps_p1.Enabled = true;
+                button_stone_p2.Font = new Font("Microsoft Sans Serif", 21F);
+                button_stone_p2.Size = new Size(75, 75);
+                button_stone_p2.Location = new Point(button_stone_p2.Location.X + 5, button_stone_p2.Location.Y + 5);
+                button_stone_p2.Enabled = false;
+                button_caps_p2.Enabled = false;
+                if (p2_stand)
+                {
+                    p2_stand = false;
+                    button_stone_p2.Size = new Size(75, 75);
+                    button_stone_p2.Location = new Point(button_stone_p2.Location.X, button_stone_p2.Location.Y - 15);
+                    button_caps_p2.Enabled = true;
+                    p2_status.Text = "Stone";
+                }
+                if (p2_caps)
+                {
+                    p2_caps = false;
+                    button_caps_p2.Size = new Size(75, 75);
+                    button_caps_p2.Location = new Point(button_caps_p2.Location.X + 5, button_caps_p2.Location.Y + 5);
+                    button_stone_p2.Size = new Size(75, 75);
+                    button_stone_p2.Location = new Point(button_stone_p2.Location.X - 5, button_stone_p2.Location.Y - 5);
+                    p2_status.Text = "Stone";
+                }
+            }
+        }
+
+
+
+        private void button_stone_p1_Click(object sender, EventArgs e)
+        {
+            if (!earlyStep_p1)
+            {
+                if (p1_stand)
+                {
+                    p1_stand = false;
+                    p1_status.Text = "Stone";
+                    button_stone_p1.Size = new Size(85, 85);
+                    button_stone_p1.Location = new Point(button_stone_p1.Location.X, button_stone_p1.Location.Y - 15);
+                    button_caps_p1.Enabled = true;
+                }
+                else
+                {
+                    p1_stand = true;
+                    p1_status.Text = "Stand Stone";
+                    button_stone_p1.Size = new Size(85, 55);
+                    button_stone_p1.Location = new Point(button_stone_p1.Location.X, button_stone_p1.Location.Y + 15);
+                    button_caps_p1.Enabled = false;
+                }
+            }
+        }
+
+        private void button_caps_p1_Click(object sender, EventArgs e)
+        {
+            if (!earlyStep_p1)
+            {
+                if (p1_caps)
+                {
+                    p1_caps = false;
+                    p1_status.Text = "Stone";
+                    button_caps_p1.Size = new Size(75, 75);
+                    button_caps_p1.Location = new Point(button_caps_p1.Location.X + 5, button_caps_p1.Location.Y + 5);
+                    button_stone_p1.Enabled = true;
+                    button_stone_p1.Size = new Size(85, 85);
+                    button_stone_p1.Location = new Point(button_stone_p1.Location.X - 5, button_stone_p1.Location.Y - 5);
+                }
+                else
+                {
+                    p1_caps = true;
+                    p1_status.Text = "Capstone";
+                    button_caps_p1.Size = new Size(85, 85);
+                    button_caps_p1.Location = new Point(button_caps_p1.Location.X - 5, button_caps_p1.Location.Y - 5);
+                    button_stone_p1.Enabled = false;
+                    button_stone_p1.Size = new Size(75, 75);
+                    button_stone_p1.Location = new Point(button_stone_p1.Location.X + 5, button_stone_p1.Location.Y + 5);
+                }
+            }
+        }
+
+        private void button_stone_p2_Click(object sender, EventArgs e)
+        {
+            if (!earlyStep_p2)
+            {
+                if (p2_stand)
+                {
+                    p2_stand = false;
+                    p2_status.Text = "Stone";
+                    button_stone_p2.Size = new Size(85, 85);
+                    button_stone_p2.Location = new Point(button_stone_p2.Location.X, button_stone_p2.Location.Y - 15);
+                    button_caps_p2.Enabled = true;
+                }
+                else
+                {
+                    p2_stand = true;
+                    p2_status.Text = "Stand Stone";
+                    button_stone_p2.Size = new Size(85, 55);
+                    button_stone_p2.Location = new Point(button_stone_p2.Location.X, button_stone_p2.Location.Y + 15);
+                    button_caps_p2.Enabled = false;
+                }
+            }
+        }
+
+        private void button_caps_p2_Click(object sender, EventArgs e)
+        {
+            if (!earlyStep_p2)
+            {
+                if (p2_caps)
+                {
+                    p2_caps = false;
+                    p2_status.Text = "Stone";
+                    button_caps_p2.Size = new Size(75, 75);
+                    button_caps_p2.Location = new Point(button_caps_p2.Location.X + 5, button_caps_p2.Location.Y + 5);
+                    button_stone_p2.Enabled = true;
+                    button_stone_p2.Size = new Size(85, 85);
+                    button_stone_p2.Location = new Point(button_stone_p2.Location.X - 5, button_stone_p2.Location.Y - 5);
+                }
+                else
+                {
+                    p2_caps = true;
+                    p2_status.Text = "Capstone";
+                    button_caps_p2.Size = new Size(85, 85);
+                    button_caps_p2.Location = new Point(button_caps_p2.Location.X - 5, button_caps_p2.Location.Y - 5);
+                    button_stone_p2.Enabled = false;
+                    button_stone_p2.Size = new Size(75, 75);
+                    button_stone_p2.Location = new Point(button_stone_p2.Location.X + 5, button_stone_p2.Location.Y + 5);
+                }
+            }
+        }
+
+
 
         public void CheckWinning()
         {

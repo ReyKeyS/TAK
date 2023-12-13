@@ -12,11 +12,11 @@ namespace TAK
         public bool Caps { get; set; }
         public bool Stand { get; set; }
 
-        public Stone(int player, bool caps, bool stand)
+        public Stone(int player, bool stand, bool caps)
         {
             Player = player;
-            Caps = caps;
             Stand = stand;
+            Caps = caps;
         }
 
         public static implicit operator List<object>(Stone v)
