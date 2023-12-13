@@ -155,6 +155,11 @@ namespace TAK
                         map[y, x].Text = "";
                         map[y, x].BackColor = Color.White;
                         board[y, x].Clear();
+                        if (map[y, x].Size.Height != 90)
+                        {
+                            map[y, x].Size = new Size(90, 90);
+                            map[y, x].Location = new Point(map[y, x].Location.X, map[y, x].Location.Y - 20);
+                        }
 
                     }
                     else MessageBox.Show("Not Yours");
@@ -170,10 +175,12 @@ namespace TAK
                 if (earlyStep_p1) {
                     board[y, x].Add(new Stone(whosTurn, false, false));
                     board[y, x][board[y, x].Count - 1].Player = 2;
-                    map[y, x].BackColor = p2_color;
                     earlyStep_p1 = false;
+
                     p2_stones--;
                     button_stone_p2.Text = p2_stones.ToString();
+
+                    Update_Map(y, x);
                 }
                 else
                 {
@@ -181,12 +188,21 @@ namespace TAK
                     else if (p1_caps)   board[y, x].Add(new Stone(whosTurn, false, true));
                     else                board[y, x].Add(new Stone(whosTurn, false, false));
 
-                    map[y, x].BackColor = p1_color;
-                    p1_stones--;
-                    button_stone_p1.Text = p1_stones.ToString();
+                    if (!p1_caps)
+                    {
+                        p1_stones--;
+                        button_stone_p1.Text = p1_stones.ToString();
+                    }
+                    else
+                    {
+                        p1_capstones--;
+                        button_caps_p1.Visible = false;
+                    }
+
+                    Update_Map(y, x);
                 }
 
-                change_Turn();
+                Change_Turn();
             }
             else if (whosTurn == 2)
             {
@@ -194,10 +210,12 @@ namespace TAK
                 {
                     board[y, x].Add(new Stone(whosTurn, false, false));
                     board[y, x][board[y, x].Count - 1].Player = 1;
-                    map[y, x].BackColor = p1_color;
                     earlyStep_p2 = false;
-                    p1_stones--;
-                    button_stone_p1.Text = p1_stones.ToString();
+
+                    p2_stones--;
+                    button_stone_p2.Text = p1_stones.ToString();
+
+                    Update_Map(y, x);
                 }
                 else
                 {
@@ -205,15 +223,23 @@ namespace TAK
                     else if (p2_caps)   board[y, x].Add(new Stone(whosTurn, false, true));
                     else                board[y, x].Add(new Stone(whosTurn, false, false));
 
-                    map[y, x].BackColor = p2_color;
-                    p2_stones--;
-                    button_stone_p2.Text = p2_stones.ToString();
+                    if (!p2_caps)
+                    {
+                        p2_stones--;
+                        button_stone_p2.Text = p1_stones.ToString();
+                    }
+                    else
+                    {
+                        p2_capstones--;
+                        button_caps_p2.Visible = false;
+                    }
+
+                    Update_Map(y, x);
                 }
 
-                change_Turn();
+                Change_Turn();
             }
 
-            map[y, x].Text = board[y, x].Count.ToString();
             lblWhosTurn.Text = "Player " + whosTurn;
         }
 
@@ -221,34 +247,48 @@ namespace TAK
         {
             if (Valid_Move(y, x))
             {
-                board[y, x].Add(picked[0]);
-
-                map[y, x].BackColor = (picked[0].Player == 1) ? p1_color : p2_color;
-                map[y, x].Text = board[y, x].Count.ToString();
-
-                // Replace
-                picked.RemoveAt(0);
-                this.Controls.Remove(btnPicked[0]);
-                btnPicked.RemoveAt(0);
-
-                // Set pivot + Direction
-                if (y == y_pivot - 1 && x == x_pivot) direction = "up";
-                if (y == y_pivot + 1 && x == x_pivot) direction = "down";
-                if (y == y_pivot && x == x_pivot - 1) direction = "left";
-                if (y == y_pivot && x == x_pivot + 1) direction = "right";
-                y_pivot = y; x_pivot = x;
-
-                // Reset & Moved All
-                if (btnPicked.Count == 0)
+                bool gas = true;
+                if (board[y, x].Count > 0)
                 {
-                    pickedUp = false;
-                    y_pivot = -1; x_pivot = -1;
+                    if (board[y, x][board[y, x].Count - 1].Stand)
+                    {
+                        gas = false;
+                        if (picked[0].Caps) gas = true;
+                    }
+                    if (board[y, x][board[y, x].Count - 1].Caps) gas = false;
+                }                
 
-                    if (direction != "") change_Turn();
+                if (gas)
+                {
+                    board[y, x].Add(picked[0]);
 
-                    direction = "";
-                    lblWhosTurn.Text = "Player " + whosTurn;
+                    Update_Map(y, x);
+
+                    // Replace
+                    picked.RemoveAt(0);
+                    this.Controls.Remove(btnPicked[0]);
+                    btnPicked.RemoveAt(0);
+
+                    // Set pivot + Direction
+                    if (y == y_pivot - 1 && x == x_pivot) direction = "up";
+                    if (y == y_pivot + 1 && x == x_pivot) direction = "down";
+                    if (y == y_pivot && x == x_pivot - 1) direction = "left";
+                    if (y == y_pivot && x == x_pivot + 1) direction = "right";
+                    y_pivot = y; x_pivot = x;
+
+                    // Reset & Moved All
+                    if (btnPicked.Count == 0)
+                    {
+                        pickedUp = false;
+                        y_pivot = -1; x_pivot = -1;
+
+                        if (direction != "") Change_Turn();
+
+                        direction = "";
+                        lblWhosTurn.Text = "Player " + whosTurn;
+                    }
                 }
+                else MessageBox.Show("Blocked");
             } 
             else MessageBox.Show("Invalid Move");
         }
@@ -273,8 +313,31 @@ namespace TAK
             return false;
         }
 
+        public void Update_Map(int y, int x)
+        {
+            Stone current = board[y, x][board[y, x].Count - 1];
+            Color color = (current.Player == 1) ? p1_color : p2_color;
 
-        public void change_Turn()
+            // BackColor
+            map[y, x].BackColor = color;
+            map[y, x].Text = board[y, x].Count.ToString();
+
+            // Reset Button
+            Size curr = map[y, x].Size;
+            if (curr.Height != 90)
+            {
+                map[y, x].Size = new Size(90, 90);
+                map[y, x].Location = new Point(map[y, x].Location.X, map[y, x].Location.Y - 20);
+            }
+
+            if (current.Stand)
+            {
+                map[y, x].Size = new Size(90, 50);
+                map[y, x].Location = new Point(map[y, x].Location.X, map[y, x].Location.Y + 20);
+            }
+        }
+
+        public void Change_Turn()
         {
             if (whosTurn == 1)
             {
