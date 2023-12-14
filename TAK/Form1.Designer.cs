@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
             this.panelBoard = new System.Windows.Forms.Panel();
             this.label2 = new System.Windows.Forms.Label();
@@ -40,6 +41,7 @@
             this.button_caps_p2 = new System.Windows.Forms.Button();
             this.p1_status = new System.Windows.Forms.Label();
             this.p2_status = new System.Windows.Forms.Label();
+            this.timerAI = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // label1
@@ -178,6 +180,10 @@
             this.p2_status.Text = "Capstones";
             this.p2_status.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
+            // timerAI
+            // 
+            this.timerAI.Tick += new System.EventHandler(this.timerAI_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -217,6 +223,7 @@
         private System.Windows.Forms.Button button_caps_p2;
         private System.Windows.Forms.Label p1_status;
         private System.Windows.Forms.Label p2_status;
+        private System.Windows.Forms.Timer timerAI;
     }
 }
 

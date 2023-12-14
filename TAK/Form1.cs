@@ -80,6 +80,8 @@ namespace TAK
             p2_stand = false;
             p2_caps = false;
             p2_status.Text = "Stone";
+
+            timerAI.Start();
         }
 
         public void GenerateMap()
@@ -255,7 +257,11 @@ namespace TAK
                     if (board[y, x][board[y, x].Count - 1].Stand)
                     {
                         gas = false;
-                        if (picked[0].Caps) gas = true;
+                        if (picked[0].Caps)
+                        {
+                            gas = true;
+                            board[y, x][board[y, x].Count - 1].Stand = false;
+                        }
                     }
                     if (board[y, x][board[y, x].Count - 1].Caps) gas = false;
                 }                
@@ -520,7 +526,7 @@ namespace TAK
 
 
 
-        public void CheckWinning()
+        public bool CheckWinning()
         {
             bool win = false;
             // Rows & Columns
@@ -529,6 +535,7 @@ namespace TAK
 
             if (win)
             {
+                timerAI.Stop();
                 DialogResult result = MessageBox.Show("Try Again?", "Alert", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes)
                 {
@@ -542,6 +549,7 @@ namespace TAK
                     this.Close();
                 }
             }
+            return win;
         }
 
         public bool CheckAllCond(Color color)
@@ -571,6 +579,147 @@ namespace TAK
                 }
             }
             return false;
+        }
+
+
+
+        // AI
+        public void AI_Move()
+        {
+            if (whosTurn == 2)
+            {
+                int[] move = MiniMax(2, int.MinValue, int.MaxValue);
+                ActionClicking(move[0], move[1]);
+            }
+        }
+
+        private int[] MiniMax(int depth, int alpha, int beta)
+        {
+            if (depth == 0 || CheckWinning()) // You may need to modify CheckWinning for ties or other conditions
+            {
+                // Evaluate the board position (heuristic function)
+                // For simplicity, let's assume the AI is always player 2
+                int score = EvaluateBoard();
+                return new int[] { -1, -1, score };
+            }
+
+            List<int[]> possibleMoves = GeneratePossibleMoves();
+
+            if (whosTurn == 2) // Maximizing player (AI)
+            {
+                int maxScore = int.MinValue;
+                int[] bestMove = null;
+
+                foreach (var move in possibleMoves)
+                {
+                    ActionClicking(move[0], move[1]);
+                    int score = MiniMax(depth - 1, alpha, beta)[2];
+                    UndoMove(move[0], move[1]);
+
+                    if (score > maxScore)
+                    {
+                        maxScore = score;
+                        bestMove = move;
+                    }
+
+                    alpha = Math.Max(alpha, maxScore);
+                    if (beta <= alpha)
+                        break; // Pruning
+                }
+
+                return new int[] { bestMove[0], bestMove[1], maxScore };
+            }
+            else // Minimizing player (Human)
+            {
+                int minScore = int.MaxValue;
+                int[] bestMove = null;
+
+                foreach (var move in possibleMoves)
+                {
+                    ActionClicking(move[0], move[1]);
+                    int score = MiniMax(depth - 1, alpha, beta)[2];
+                    UndoMove(move[0], move[1]);
+
+                    if (score < minScore)
+                    {
+                        minScore = score;
+                        bestMove = move;
+                    }
+
+                    beta = Math.Min(beta, minScore);
+                    if (beta <= alpha)
+                        break; // Pruning
+                }
+
+                return new int[] { bestMove[0], bestMove[1], minScore };
+            }
+        }
+
+        private List<int[]> GeneratePossibleMoves()
+        {
+            List<int[]> moves = new List<int[]>();
+
+            for (int y = 0; y < 6; y++)
+            {
+                for (int x = 0; x < 6; x++)
+                {
+                    if (board[y, x].Count == 0)
+                    {
+                        moves.Add(new int[] { y, x });
+                    }
+                }
+            }
+
+            return moves;
+        }
+
+        private void UndoMove(int y, int x)
+        {
+            board[y, x].RemoveAt(board[y, x].Count - 1);
+            Update_Map(y, x);
+        }
+
+        private int EvaluateBoard()
+        {
+            int score = 0;
+
+            // Evaluate the difference in the number of stones
+            int stoneDifference = p2_stones - p1_stones;
+            score += stoneDifference;
+
+            // Evaluate control of the center of the board
+            int centerControl = 0;
+            if (map[2, 2].BackColor == p2_color)
+                centerControl = 1;
+            else if (map[2, 2].BackColor == p1_color)
+                centerControl = -1;
+
+            score += centerControl;
+
+            return score;
+        }
+
+        private void timerAI_Tick(object sender, EventArgs e)
+        {
+            //if (!earlyStep_p2) AI_Move();
+            //else if (earlyStep_p2 && whosTurn == 2)
+            //{
+            //}
+            if (whosTurn == 2)
+            {
+                Random rand = new Random();
+                int y, x;
+                bool randoming = true;
+                do
+                {
+                    y = rand.Next(0, 6);
+                    x = rand.Next(0, 6);
+                    randoming = false;
+                    if (board[y, x].Count > 0) randoming = true;
+                } while (randoming);
+
+                ActionClicking(y, x);
+            }
         }
     }
 }
