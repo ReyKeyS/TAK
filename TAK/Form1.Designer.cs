@@ -182,7 +182,7 @@
             // 
             // timerAI
             // 
-            this.timerAI.Tick += new System.EventHandler(this.timerAI_Tick);
+            this.timerAI.Tick += new System.EventHandler(this.TimerAI_Tick);
             // 
             // Form1
             // 

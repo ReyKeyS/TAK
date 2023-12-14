@@ -583,130 +583,20 @@ namespace TAK
 
 
 
-        // AI
-        public void AI_Move()
+        // ----------------------    AI    ----------------------
+        private void TimerAI_Tick(object sender, EventArgs e)
         {
-            if (whosTurn == 2)
+            if (!earlyStep_p2 && whosTurn == 2)
             {
-                int[] move = MiniMax(2, int.MinValue, int.MaxValue);
-                ActionClicking(move[0], move[1]);
+                // Minimax with Alpha Beta Pruning
+                (int, int) bestMove = GetBestMoveForAI();
+                
+                // Action
+                ActionClicking(bestMove.Item1, bestMove.Item2);                
             }
-        }
-
-        private int[] MiniMax(int depth, int alpha, int beta)
-        {
-            if (depth == 0 || CheckWinning()) // You may need to modify CheckWinning for ties or other conditions
+            else if (earlyStep_p2 && whosTurn == 2)
             {
-                // Evaluate the board position (heuristic function)
-                // For simplicity, let's assume the AI is always player 2
-                int score = EvaluateBoard();
-                return new int[] { -1, -1, score };
-            }
-
-            List<int[]> possibleMoves = GeneratePossibleMoves();
-
-            if (whosTurn == 2) // Maximizing player (AI)
-            {
-                int maxScore = int.MinValue;
-                int[] bestMove = null;
-
-                foreach (var move in possibleMoves)
-                {
-                    ActionClicking(move[0], move[1]);
-                    int score = MiniMax(depth - 1, alpha, beta)[2];
-                    UndoMove(move[0], move[1]);
-
-                    if (score > maxScore)
-                    {
-                        maxScore = score;
-                        bestMove = move;
-                    }
-
-                    alpha = Math.Max(alpha, maxScore);
-                    if (beta <= alpha)
-                        break; // Pruning
-                }
-
-                return new int[] { bestMove[0], bestMove[1], maxScore };
-            }
-            else // Minimizing player (Human)
-            {
-                int minScore = int.MaxValue;
-                int[] bestMove = null;
-
-                foreach (var move in possibleMoves)
-                {
-                    ActionClicking(move[0], move[1]);
-                    int score = MiniMax(depth - 1, alpha, beta)[2];
-                    UndoMove(move[0], move[1]);
-
-                    if (score < minScore)
-                    {
-                        minScore = score;
-                        bestMove = move;
-                    }
-
-                    beta = Math.Min(beta, minScore);
-                    if (beta <= alpha)
-                        break; // Pruning
-                }
-
-                return new int[] { bestMove[0], bestMove[1], minScore };
-            }
-        }
-
-        private List<int[]> GeneratePossibleMoves()
-        {
-            List<int[]> moves = new List<int[]>();
-
-            for (int y = 0; y < 6; y++)
-            {
-                for (int x = 0; x < 6; x++)
-                {
-                    if (board[y, x].Count == 0)
-                    {
-                        moves.Add(new int[] { y, x });
-                    }
-                }
-            }
-
-            return moves;
-        }
-
-        private void UndoMove(int y, int x)
-        {
-            board[y, x].RemoveAt(board[y, x].Count - 1);
-            Update_Map(y, x);
-        }
-
-        private int EvaluateBoard()
-        {
-            int score = 0;
-
-            // Evaluate the difference in the number of stones
-            int stoneDifference = p2_stones - p1_stones;
-            score += stoneDifference;
-
-            // Evaluate control of the center of the board
-            int centerControl = 0;
-            if (map[2, 2].BackColor == p2_color)
-                centerControl = 1;
-            else if (map[2, 2].BackColor == p1_color)
-                centerControl = -1;
-
-            score += centerControl;
-
-            return score;
-        }
-
-        private void timerAI_Tick(object sender, EventArgs e)
-        {
-            //if (!earlyStep_p2) AI_Move();
-            //else if (earlyStep_p2 && whosTurn == 2)
-            //{
-            //}
-            if (whosTurn == 2)
-            {
+                // Randoming the first Step
                 Random rand = new Random();
                 int y, x;
                 bool randoming = true;
@@ -720,6 +610,131 @@ namespace TAK
 
                 ActionClicking(y, x);
             }
+        }
+
+        private (int, int) GetBestMoveForAI()
+        {
+            int bestEval = int.MinValue;
+            (int, int) bestMove = (-1, -1);
+
+            foreach (var move in GetPossibleMoves(2))
+            {
+                MakeMove(move.Item1, move.Item2, 2);
+
+                int eval = MinimaxWithAlphaBeta(5, false, int.MinValue, int.MaxValue); // Adjust the depth as needed
+                if (eval > bestEval)
+                {
+                    bestEval = eval;
+                    bestMove = move;
+                }
+
+                UndoMove(move.Item1, move.Item2);
+            }
+
+            return bestMove;
+        }
+
+        private List<(int, int)> GetPossibleMoves(int player)
+        {
+            List<(int, int)> moves = new List<(int, int)>();
+
+            for (int y = 0; y < 6; y++)
+            {
+                for (int x = 0; x < 6; x++)
+                {
+                    if (board[y, x].Count < 1)
+                    {
+                        // Add all possible moves for the current player
+                        // You may want to filter out invalid moves based on your game rules
+                        moves.Add((y, x));
+                    }
+                }
+            }
+
+            return moves;
+        }
+
+        private int MinimaxWithAlphaBeta(int depth, bool maximizingPlayer, int alpha, int beta)
+        {
+            if (depth == 0)
+            {
+                // Evaluate the current state (you need to define your own evaluation function)
+                return Evaluate();
+            }
+
+            if (maximizingPlayer) // Player 2 (AI)
+            {
+                int maxEval = int.MinValue;
+
+                foreach (var move in GetPossibleMoves(2))
+                {
+                    MakeMove(move.Item1, move.Item2, 2);
+
+                    int eval = MinimaxWithAlphaBeta(depth - 1, false, alpha, beta);
+                    maxEval = Math.Max(maxEval, eval);
+
+                    UndoMove(move.Item1, move.Item2);
+
+                    alpha = Math.Max(alpha, eval);
+                    if (beta <= alpha)
+                        break; // Beta pruning
+                }
+
+                return maxEval;
+            }
+            else // Player 1
+            {
+                int minEval = int.MaxValue;
+
+                foreach (var move in GetPossibleMoves(1))
+                {
+                    MakeMove(move.Item1, move.Item2, 1);
+
+                    int eval = MinimaxWithAlphaBeta(depth - 1, true, alpha, beta);
+                    minEval = Math.Min(minEval, eval);
+
+                    UndoMove(move.Item1, move.Item2);
+
+                    beta = Math.Min(beta, eval);
+                    if (beta <= alpha)
+                        break; // Alpha pruning
+                }
+
+                return minEval;
+            }
+        }
+
+        public void MakeMove(int y, int x, int player)
+        {
+            board[y, x].Add(new Stone(player, false, false));
+        }
+
+        private void UndoMove(int y, int x)
+        {
+            board[y, x].RemoveAt(board[y, x].Count - 1);
+        }
+
+        private int Evaluate()
+        {
+            int score = 0;
+
+            // Evaluate the difference in the number of stones
+            int stoneDifference = p2_stones - p1_stones;
+            score += stoneDifference;
+
+            // Evaluate control of the center of the board
+            int centerControl = 0;
+            if (board[2, 2].Count > 0)
+            {
+                if (board[2, 2][board[2, 2].Count - 1].Player == 1)
+                    centerControl = 1;
+                else if (board[2, 2][board[2, 2].Count - 1].Player == 1)
+                    centerControl = -1;
+            }
+
+            score += centerControl;
+
+            return score;
         }
     }
 }
