@@ -638,15 +638,36 @@ namespace TAK
         {
             List<(int, int)> moves = new List<(int, int)>();
 
-            for (int y = 0; y < 6; y++)
+            if (pickedUp)
             {
-                for (int x = 0; x < 6; x++)
+                moves.Add((y_pivot, x_pivot));
+
+                if (direction == "")
                 {
-                    if (board[y, x].Count < 1)
+                    moves.Add((y_pivot + 1, x_pivot));
+                    moves.Add((y_pivot - 1, x_pivot));
+                    moves.Add((y_pivot, x_pivot + 1));
+                    moves.Add((y_pivot, x_pivot - 1));
+                }
+                else
+                {
+                    if (direction == "up") moves.Add((y_pivot - 1, x_pivot));
+                    if (direction == "down") moves.Add((y_pivot + 1, x_pivot));
+                    if (direction == "left") moves.Add((y_pivot, x_pivot - 1));
+                    if (direction == "right") moves.Add((y_pivot, x_pivot + 1));
+                }
+            }
+            else
+            {
+                for (int y = 0; y < 6; y++)
+                {
+                    for (int x = 0; x < 6; x++)
                     {
-                        // Add all possible moves for the current player
-                        // You may want to filter out invalid moves based on your game rules
-                        moves.Add((y, x));
+                        if (board[y, x].Count < 1)
+                        {
+                            //|| board[y, x][board[y, x].Count - 1].Player == 2
+                            moves.Add((y, x));
+                        }
                     }
                 }
             }
@@ -722,17 +743,16 @@ namespace TAK
             int stoneDifference = p2_stones - p1_stones;
             score += stoneDifference;
 
-            // Evaluate control of the center of the board
-            int centerControl = 0;
-            if (board[2, 2].Count > 0)
-            {
-                if (board[2, 2][board[2, 2].Count - 1].Player == 1)
-                    centerControl = 1;
-                else if (board[2, 2][board[2, 2].Count - 1].Player == 1)
-                    centerControl = -1;
-            }
-
-            score += centerControl;
+            //// Evaluate control of the center of the board
+            //int centerControl = 0;
+            //if (board[2, 2].Count > 0)
+            //{
+            //    if (board[2, 2][board[2, 2].Count - 1].Player == 1)
+            //        centerControl = 1;
+            //    else if (board[2, 2][board[2, 2].Count - 1].Player == 1)
+            //        centerControl = -1;
+            //}
+            //score += centerControl;
 
             return score;
         }
