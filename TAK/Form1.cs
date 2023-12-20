@@ -39,10 +39,11 @@ namespace TAK
         bool p2_stand;
         bool p2_caps;
 
-        public Form1()
+        bool pilih_lawan;
+        public Form1(bool pilih_lawan)
         {
             InitializeComponent();
-
+            pilih_lawan = pilih_lawan;
             Initializing();
         }
 
@@ -81,7 +82,10 @@ namespace TAK
             p2_caps = false;
             p2_status.Text = "Stone";
 
-            timerAI.Start();
+            if (pilih_lawan)
+            {
+                timerAI.Start();
+            }
         }
 
         public void GenerateMap()
@@ -540,7 +544,7 @@ namespace TAK
                 if (result == DialogResult.Yes)
                 {
                     this.Hide();
-                    Form1 f = new Form1();
+                    Form1 f = new Form1(pilih_lawan);
                     f.ShowDialog();
                     this.Close();
                 }
