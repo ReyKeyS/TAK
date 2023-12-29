@@ -26,17 +26,19 @@ namespace TAK
         private void Player_MouseClick(object sender, MouseEventArgs e)
         {
             pilih_lawan = false;
-            Form1 formutama= new Form1(pilih_lawan);
-            formutama.Show();
             this.Hide();
+            Form1 formutama= new Form1(pilih_lawan);
+            formutama.ShowDialog();
+            this.Close();
         }
 
         private void AI_MouseClick(object sender, MouseEventArgs e)
         {
             pilih_lawan = true;
-            Form1 formutama = new Form1(pilih_lawan);
-            formutama.Show();
             this.Hide();
+            Form1 formutama = new Form1(pilih_lawan);
+            formutama.ShowDialog();
+            this.Close();
         }
     }
 }

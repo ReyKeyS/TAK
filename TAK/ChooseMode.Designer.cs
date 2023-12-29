@@ -35,7 +35,7 @@
             // 
             // Player
             // 
-            this.Player.Location = new System.Drawing.Point(141, 179);
+            this.Player.Location = new System.Drawing.Point(26, 76);
             this.Player.Name = "Player";
             this.Player.Size = new System.Drawing.Size(100, 100);
             this.Player.TabIndex = 0;
@@ -45,7 +45,7 @@
             // 
             // AI
             // 
-            this.AI.Location = new System.Drawing.Point(505, 179);
+            this.AI.Location = new System.Drawing.Point(144, 76);
             this.AI.Name = "AI";
             this.AI.Size = new System.Drawing.Size(100, 100);
             this.AI.TabIndex = 1;
@@ -57,7 +57,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(299, 68);
+            this.label1.Location = new System.Drawing.Point(56, 28);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(159, 26);
             this.label1.TabIndex = 2;
@@ -67,12 +67,13 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(270, 202);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.AI);
             this.Controls.Add(this.Player);
             this.Name = "ChooseMode";
-            this.Text = "ChooseMode";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "TAK";
             this.Load += new System.EventHandler(this.ChooseMode_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

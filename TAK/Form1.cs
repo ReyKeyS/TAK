@@ -43,7 +43,7 @@ namespace TAK
         public Form1(bool pilih_lawan)
         {
             InitializeComponent();
-            pilih_lawan = pilih_lawan;
+            this.pilih_lawan = pilih_lawan;
             Initializing();
         }
 
@@ -84,6 +84,7 @@ namespace TAK
 
             if (pilih_lawan)
             {
+                MessageBox.Show("Test");
                 timerAI.Start();
             }
         }
@@ -544,7 +545,7 @@ namespace TAK
                 if (result == DialogResult.Yes)
                 {
                     this.Hide();
-                    Form1 f = new Form1(pilih_lawan);
+                    ChooseMode f = new ChooseMode();
                     f.ShowDialog();
                     this.Close();
                 }
