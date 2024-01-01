@@ -577,10 +577,12 @@ namespace TAK
                 }
                 foreach (int sX in startStoneTop)
                 {
+                    List<(int, int)> stepped = new List<(int, int)>();
+                    stepped.Add((0, sX));
                     if (whosTurn == 1 && !p1_win)
-                        RecursiveVertical(0, sX, -1, -1, whosTurn);
+                        RecursiveVertical(0, sX, -1, -1, whosTurn, stepped);
                     if (whosTurn == 2 && !p2_win)
-                        RecursiveVertical(0, sX, -1, -1, whosTurn);
+                        RecursiveVertical(0, sX, -1, -1, whosTurn, stepped);
                 }
 
                 // Kiri
@@ -594,15 +596,17 @@ namespace TAK
                 }
                 foreach (int sY in startStoneLeft)
                 {
+                    List<(int, int)> stepped = new List<(int, int)>();
+                    stepped.Add((sY, 0));
                     if (whosTurn == 1 && !p1_win)
-                        RecursiveHorizontal(sY, 0, -1, -1, whosTurn);
+                        RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
                     if (whosTurn == 2 && !p2_win)
-                        RecursiveHorizontal(sY, 0, -1, -1, whosTurn);
+                        RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
                 }   
             }
         }
 
-        public void RecursiveVertical(int y, int x, int before_y, int before_x, int whosTurn)
+        public void RecursiveVertical(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped)
         {
             if (y == 5)
             {
@@ -616,13 +620,16 @@ namespace TAK
                 int[] nextX = { 0, -1, 1, 0 };
                 for (int i = 0; i < 4; i++)
                 {
-                    if (validColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn))
-                        RecursiveVertical(y + nextY[i], x + nextX[i], y, x, whosTurn);
+                    if (validColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped))
+                    {
+                        stepped.Add((y + nextY[i], x + nextX[i]));
+                        RecursiveVertical(y + nextY[i], x + nextX[i], y, x, whosTurn, stepped);
+                    }
                 }
             }
         }
 
-        public void RecursiveHorizontal(int y, int x, int before_y, int before_x, int whosTurn)
+        public void RecursiveHorizontal(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped)
         {
             if (x == 5)
             {
@@ -636,15 +643,23 @@ namespace TAK
                 int[] nextX = { -1, 0, 0, 1 };
                 for (int i = 0; i < 4; i++)
                 {
-                    if (validColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn))
-                        RecursiveHorizontal(y + nextY[i], x + nextX[i], y, x, whosTurn);
+                    if (validColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped))
+                    {
+                        stepped.Add((y + nextY[i], x + nextX[i]));
+                        RecursiveHorizontal(y + nextY[i], x + nextX[i], y, x, whosTurn, stepped);
+                    }
                 }
             }
         }
 
-        public bool validColor(int y, int x, int before_y, int before_x, int whosTurn)
+        public bool validColor(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped)
         {
             if (y == before_y && x == before_x) return false;
+
+            for (int i = 0; i < stepped.Count; i++)
+            {
+                if (y == stepped[i].Item1 && x == stepped[i].Item2) return false;
+            }
 
             if (y >= 0 && y < 6 && x >= 0 && x < 6)
             {
