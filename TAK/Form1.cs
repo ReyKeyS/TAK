@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -24,6 +25,8 @@ namespace TAK
         string direction;
         List<Stone> picked;
         List<Button> btnPicked;
+        bool p1_win;
+        bool p2_win;
 
         int whosTurn;
 
@@ -49,6 +52,8 @@ namespace TAK
 
         public void Initializing()
         {
+            p1_win = false;
+            p2_win = false;
             // Initialize Map
             earlyStep_p1 = true;
             earlyStep_p2 = true;
@@ -221,8 +226,8 @@ namespace TAK
                     board[y, x][board[y, x].Count - 1].Player = 1;
                     earlyStep_p2 = false;
 
-                    p2_stones--;
-                    button_stone_p2.Text = p1_stones.ToString();
+                    p1_stones--;
+                    button_stone_p1.Text = p1_stones.ToString();
 
                     Update_Map(y, x);
                 }
@@ -533,10 +538,13 @@ namespace TAK
 
         public bool CheckWinning()
         {
+            if (!earlyStep_p1 && !earlyStep_p2)
+                CheckWin();
+
             bool win = false;
             // Rows & Columns
-            if (CheckAllCond(p1_color)) { MessageBox.Show("Player 1 Win"); win = true; }
-            else if (CheckAllCond(p2_color)) { MessageBox.Show("Player 2 Win"); win = true; }
+            if (p1_win) { MessageBox.Show("Player 1 Win"); win = true; }
+            else if (p2_win) { MessageBox.Show("Player 2 Win"); win = true; }
 
             if (win)
             {
@@ -557,32 +565,96 @@ namespace TAK
             return win;
         }
 
-        public bool CheckAllCond(Color color)
+        public void CheckWin()
         {
-            return CheckRows(color) || CheckCols(color);
+            for (int whosTurn = 1; whosTurn <= 2; whosTurn++)
+            {
+                // Atas
+                List<int> startStoneTop = new List<int>();
+                for (int x = 0; x < 6; x++)
+                {
+                    if (board[0, x].Count > 0 && board[0, x][board[0, x].Count - 1].Player == whosTurn && !board[0, x][board[0, x].Count - 1].Stand)
+                    {
+                        startStoneTop.Add(x);
+                    }
+                }
+                foreach (int sX in startStoneTop)
+                {
+                    if (whosTurn == 1 && !p1_win)
+                        RecursiveVertical(0, sX, -1, -1, whosTurn);
+                    if (whosTurn == 2 && !p2_win)
+                        RecursiveVertical(0, sX, -1, -1, whosTurn);
+                }
+
+                // Kiri
+                List<int> startStoneLeft = new List<int>();
+                for (int y = 0; y < 6; y++)
+                {
+                    if (board[y, 0].Count > 0 && board[y, 0][board[y, 0].Count - 1].Player == whosTurn && !board[y, 0][board[y, 0].Count - 1].Stand)
+                    {
+                        startStoneLeft.Add(y);
+                    }
+                }
+                foreach (int sY in startStoneLeft)
+                {
+                    if (whosTurn == 1 && !p1_win)
+                        RecursiveHorizontal(sY, 0, -1, -1, whosTurn);
+                    if (whosTurn == 2 && !p2_win)
+                        RecursiveHorizontal(sY, 0, -1, -1, whosTurn);
+                }   
+            }
         }
 
-        public bool CheckRows(Color color)
+        public void RecursiveVertical(int y, int x, int before_y, int before_x, int whosTurn)
         {
-            for (int y = 0; y < 6; y++)
+            if (y == 5)
             {
-                if (map[y, 0].BackColor == color && map[y, 1].BackColor == color && map[y, 2].BackColor == color && map[y, 3].BackColor == color && map[y, 4].BackColor == color && map[y, 5].BackColor == color)
+                if (whosTurn == 1) p1_win = true;
+                else if (whosTurn == 2) p2_win = true;
+            }
+            else
+            {
+                // Bawah, Kiri, Kanan, Atas
+                int[] nextY = { 1, 0, 0, -1 };
+                int[] nextX = { 0, -1, 1, 0 };
+                for (int i = 0; i < 4; i++)
                 {
-                    return true;
+                    if (validColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn))
+                        RecursiveVertical(y + nextY[i], x + nextX[i], y, x, whosTurn);
                 }
             }
-            return false;
         }
 
-        public bool CheckCols(Color color)
+        public void RecursiveHorizontal(int y, int x, int before_y, int before_x, int whosTurn)
         {
-            for (int x = 0; x < 6; x++)
+            if (x == 5)
             {
-                if (map[0, x].BackColor == color && map[1, x].BackColor == color && map[2, x].BackColor == color && map[3, x].BackColor == color && map[4, x].BackColor == color && map[5, x].BackColor == color)
+                if (whosTurn == 1) p1_win = true;
+                else if (whosTurn == 2) p2_win = true;
+            }
+            else
+            {
+                // Kanan, Bawah, Atas, Kiri
+                int[] nextY = { 0, 1, -1, 0 };
+                int[] nextX = { -1, 0, 0, 1 };
+                for (int i = 0; i < 4; i++)
                 {
-                    return true;
+                    if (validColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn))
+                        RecursiveHorizontal(y + nextY[i], x + nextX[i], y, x, whosTurn);
                 }
             }
+        }
+
+        public bool validColor(int y, int x, int before_y, int before_x, int whosTurn)
+        {
+            if (y == before_y && x == before_x) return false;
+
+            if (y >= 0 && y < 6 && x >= 0 && x < 6)
+            {
+                if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == whosTurn && !board[y, x][board[y, x].Count - 1].Stand)
+                    return true;
+            }
+
             return false;
         }
 
