@@ -88,10 +88,7 @@ namespace TAK
             p2_status.Text = "Stone";
 
             if (pilih_lawan)
-            {
-                MessageBox.Show("Test");
                 timerAI.Start();
-            }
         }
 
         public void GenerateMap()
@@ -817,19 +814,42 @@ namespace TAK
             int score = 0;
 
             // Evaluate the difference in the number of stones
-            int stoneDifference = p2_stones - p1_stones;
-            score += stoneDifference;
+            int stone_p1 = 0;
+            int stone_p2 = 0;
+            for (int y = 0; y < 6; y++)
+            {
+                for (int x = 0; x < 6; x++)
+                {
+                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 1)
+                        stone_p1++;
+                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                        stone_p2++;
+                }
+            }
+            score += stone_p2 - stone_p1;
 
-            //// Evaluate control of the center of the board
-            //int centerControl = 0;
-            //if (board[2, 2].Count > 0)
+            // Evaluate control of the center of the board
+            int centerControl = 0;
+            for (int y = 2; y <= 3; y++)
+            {
+                for (int x = 2; x <= 3; x++)
+                {
+                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 1)
+                        centerControl--;
+                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                        centerControl++;
+                }
+            }
+            score += centerControl;
+
+            //if (!earlyStep_p2)
             //{
-            //    if (board[2, 2][board[2, 2].Count - 1].Player == 1)
-            //        centerControl = 1;
-            //    else if (board[2, 2][board[2, 2].Count - 1].Player == 1)
-            //        centerControl = -1;
+            //    CheckWin();
+            //    if (p1_win) score -= 100;
+            //    if (p2_win) score += 100;
+            //    p1_win = false;
+            //    p2_win = false;
             //}
-            //score += centerControl;
 
             return score;
         }
