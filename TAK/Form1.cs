@@ -431,7 +431,7 @@ namespace TAK
 
 
 
-        private void button_stone_p1_Click(object sender, EventArgs e)
+        private void Button_stone_p1_Click(object sender, EventArgs e)
         {
             if (!earlyStep_p1)
             {
@@ -454,7 +454,7 @@ namespace TAK
             }
         }
 
-        private void button_caps_p1_Click(object sender, EventArgs e)
+        private void Button_caps_p1_Click(object sender, EventArgs e)
         {
             if (!earlyStep_p1)
             {
@@ -481,7 +481,7 @@ namespace TAK
             }
         }
 
-        private void button_stone_p2_Click(object sender, EventArgs e)
+        private void Button_stone_p2_Click(object sender, EventArgs e)
         {
             if (!earlyStep_p2)
             {
@@ -504,7 +504,7 @@ namespace TAK
             }
         }
 
-        private void button_caps_p2_Click(object sender, EventArgs e)
+        private void Button_caps_p2_Click(object sender, EventArgs e)
         {
             if (!earlyStep_p2)
             {
@@ -620,7 +620,7 @@ namespace TAK
                 int[] nextX = { 0, -1, 1, 0 };
                 for (int i = 0; i < 4; i++)
                 {
-                    if (validColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped))
+                    if (ValidColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped))
                     {
                         stepped.Add((y + nextY[i], x + nextX[i]));
                         RecursiveVertical(y + nextY[i], x + nextX[i], y, x, whosTurn, stepped);
@@ -643,7 +643,7 @@ namespace TAK
                 int[] nextX = { -1, 0, 0, 1 };
                 for (int i = 0; i < 4; i++)
                 {
-                    if (validColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped))
+                    if (ValidColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped))
                     {
                         stepped.Add((y + nextY[i], x + nextX[i]));
                         RecursiveHorizontal(y + nextY[i], x + nextX[i], y, x, whosTurn, stepped);
@@ -652,7 +652,7 @@ namespace TAK
             }
         }
 
-        public bool validColor(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped)
+        public bool ValidColor(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped)
         {
             if (y == before_y && x == before_x) return false;
 
@@ -844,18 +844,18 @@ namespace TAK
             score += stone_p2 - stone_p1;
 
             // Evaluate control of the center of the board
-            int centerControl = 0;
-            for (int y = 2; y <= 3; y++)
-            {
-                for (int x = 2; x <= 3; x++)
-                {
-                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 1)
-                        centerControl--;
-                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
-                        centerControl++;
-                }
-            }
-            score += centerControl;
+            //int centerControl = 0;
+            //for (int y = 2; y <= 3; y++)
+            //{
+            //    for (int x = 2; x <= 3; x++)
+            //    {
+            //        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 1)
+            //            centerControl--;
+            //        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+            //            centerControl++;
+            //    }
+            //}
+            //score += centerControl;
 
             //if (!earlyStep_p2)
             //{

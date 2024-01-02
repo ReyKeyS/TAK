@@ -113,7 +113,7 @@
             this.button_stone_p1.TabIndex = 6;
             this.button_stone_p1.Text = "30";
             this.button_stone_p1.UseVisualStyleBackColor = false;
-            this.button_stone_p1.Click += new System.EventHandler(this.button_stone_p1_Click);
+            this.button_stone_p1.Click += new System.EventHandler(this.Button_stone_p1_Click);
             // 
             // button_stone_p2
             // 
@@ -126,7 +126,7 @@
             this.button_stone_p2.TabIndex = 7;
             this.button_stone_p2.Text = "30";
             this.button_stone_p2.UseVisualStyleBackColor = false;
-            this.button_stone_p2.Click += new System.EventHandler(this.button_stone_p2_Click);
+            this.button_stone_p2.Click += new System.EventHandler(this.Button_stone_p2_Click);
             // 
             // button_caps_p1
             // 
@@ -142,7 +142,7 @@
             this.button_caps_p1.TabIndex = 8;
             this.button_caps_p1.Text = "O";
             this.button_caps_p1.UseVisualStyleBackColor = false;
-            this.button_caps_p1.Click += new System.EventHandler(this.button_caps_p1_Click);
+            this.button_caps_p1.Click += new System.EventHandler(this.Button_caps_p1_Click);
             // 
             // button_caps_p2
             // 
@@ -158,7 +158,7 @@
             this.button_caps_p2.TabIndex = 9;
             this.button_caps_p2.Text = "O";
             this.button_caps_p2.UseVisualStyleBackColor = false;
-            this.button_caps_p2.Click += new System.EventHandler(this.button_caps_p2_Click);
+            this.button_caps_p2.Click += new System.EventHandler(this.Button_caps_p2_Click);
             // 
             // p1_status
             // 
