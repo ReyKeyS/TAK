@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -678,9 +679,11 @@ namespace TAK
             if (!earlyStep_p2 && whosTurn == 2)
             {
                 // Minimax with Alpha Beta Pruning
-                (int, int) bestMove = GetBestMoveForAI();
-                
+                (int, int, string) bestMove = GetBestMoveForAI();
+
                 // Action
+                if (bestMove.Item3 == "stand") p2_stand = true;
+                else if (bestMove.Item3 == "caps") p2_caps = true;
                 ActionClicking(bestMove.Item1, bestMove.Item2);                
             }
             else if (earlyStep_p2 && whosTurn == 2)
@@ -701,16 +704,16 @@ namespace TAK
             }
         }
 
-        private (int, int) GetBestMoveForAI()
+        private (int, int, string) GetBestMoveForAI()
         {
             int bestEval = int.MinValue;
-            (int, int) bestMove = (-1, -1);
+            (int, int, string) bestMove = (-1, -1, "flat");
 
             foreach (var move in GetPossibleMoves(2))
             {
-                MakeMove(move.Item1, move.Item2, 2);
+                MakeMove(move.Item1, move.Item2, move.Item3, 2);
 
-                int eval = MinimaxWithAlphaBeta(5, false, int.MinValue, int.MaxValue); // Adjust the depth as needed
+                int eval = MinimaxWithAlphaBeta(3, false, int.MinValue, int.MaxValue); // Adjust the depth as needed
                 if (eval > bestEval)
                 {
                     bestEval = eval;
@@ -723,28 +726,28 @@ namespace TAK
             return bestMove;
         }
 
-        private List<(int, int)> GetPossibleMoves(int player)
+        private List<(int, int, string)> GetPossibleMoves(int player)
         {
-            List<(int, int)> moves = new List<(int, int)>();
+            List<(int, int, string)> moves = new List<(int, int, string)>();
 
             if (pickedUp)
             {
-                moves.Add((y_pivot, x_pivot));
+                //moves.Add((y_pivot, x_pivot));
 
-                if (direction == "")
-                {
-                    moves.Add((y_pivot + 1, x_pivot));
-                    moves.Add((y_pivot - 1, x_pivot));
-                    moves.Add((y_pivot, x_pivot + 1));
-                    moves.Add((y_pivot, x_pivot - 1));
-                }
-                else
-                {
-                    if (direction == "up") moves.Add((y_pivot - 1, x_pivot));
-                    if (direction == "down") moves.Add((y_pivot + 1, x_pivot));
-                    if (direction == "left") moves.Add((y_pivot, x_pivot - 1));
-                    if (direction == "right") moves.Add((y_pivot, x_pivot + 1));
-                }
+                //if (direction == "")
+                //{
+                //    moves.Add((y_pivot + 1, x_pivot));
+                //    moves.Add((y_pivot - 1, x_pivot));
+                //    moves.Add((y_pivot, x_pivot + 1));
+                //    moves.Add((y_pivot, x_pivot - 1));
+                //}
+                //else
+                //{
+                //    if (direction == "up") moves.Add((y_pivot - 1, x_pivot));
+                //    if (direction == "down") moves.Add((y_pivot + 1, x_pivot));
+                //    if (direction == "left") moves.Add((y_pivot, x_pivot - 1));
+                //    if (direction == "right") moves.Add((y_pivot, x_pivot + 1));
+                //}
             }
             else
             {
@@ -754,8 +757,10 @@ namespace TAK
                     {
                         if (board[y, x].Count < 1)
                         {
-                            //|| board[y, x][board[y, x].Count - 1].Player == 2
-                            moves.Add((y, x));
+                            moves.Add((y, x, "flat"));
+                            moves.Add((y, x, "stand"));
+                            if (p2_capstones > 0)
+                                moves.Add((y, x, "caps"));
                         }
                     }
                 }
@@ -778,7 +783,7 @@ namespace TAK
 
                 foreach (var move in GetPossibleMoves(2))
                 {
-                    MakeMove(move.Item1, move.Item2, 2);
+                    MakeMove(move.Item1, move.Item2, move.Item3, 2);
 
                     int eval = MinimaxWithAlphaBeta(depth - 1, false, alpha, beta);
                     maxEval = Math.Max(maxEval, eval);
@@ -798,7 +803,7 @@ namespace TAK
 
                 foreach (var move in GetPossibleMoves(1))
                 {
-                    MakeMove(move.Item1, move.Item2, 1);
+                    MakeMove(move.Item1, move.Item2, move.Item3, 1);
 
                     int eval = MinimaxWithAlphaBeta(depth - 1, true, alpha, beta);
                     minEval = Math.Min(minEval, eval);
@@ -814,9 +819,14 @@ namespace TAK
             }
         }
 
-        public void MakeMove(int y, int x, int player)
+        public void MakeMove(int y, int x, string type, int player)
         {
-            board[y, x].Add(new Stone(player, false, false));
+            if (type == "flat")
+                board[y, x].Add(new Stone(player, false, false));
+            else if (type == "stand")
+                board[y, x].Add(new Stone(player, true, false));
+            else if (type == "caps")
+                board[y, x].Add(new Stone(player, false, true));
         }
 
         private void UndoMove(int y, int x)
@@ -826,47 +836,33 @@ namespace TAK
 
         private int Evaluate()
         {
-            int score = 0;
-
-            // Evaluate the difference in the number of stones
-            int stone_p1 = 0;
-            int stone_p2 = 0;
+            // SAMPAH
+            int flatCountScore = 0;
+            int wallScore = 0;
+            int capstoneScore = 1 - p2_capstones;
+            int stackHeightScore = 0;
             for (int y = 0; y < 6; y++)
             {
                 for (int x = 0; x < 6; x++)
                 {
-                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 1)
-                        stone_p1++;
                     if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
-                        stone_p2++;
+                    {
+                        if (!board[y, x][board[y, x].Count - 1].Stand)
+                            flatCountScore++;
+                        else
+                            wallScore++;
+                        
+                        stackHeightScore = board[y, x].Count;
+                    }
                 }
             }
-            score += stone_p2 - stone_p1;
 
-            // Evaluate control of the center of the board
-            //int centerControl = 0;
-            //for (int y = 2; y <= 3; y++)
-            //{
-            //    for (int x = 2; x <= 3; x++)
-            //    {
-            //        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 1)
-            //            centerControl--;
-            //        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
-            //            centerControl++;
-            //    }
-            //}
-            //score += centerControl;
+            int totalScore = 2 * flatCountScore +
+                             5 * capstoneScore +
+                             2 * wallScore +
+                             2 * stackHeightScore;
 
-            //if (!earlyStep_p2)
-            //{
-            //    CheckWin();
-            //    if (p1_win) score -= 100;
-            //    if (p2_win) score += 100;
-            //    p1_win = false;
-            //    p2_win = false;
-            //}
-
-            return score;
+            return totalScore;
         }
     }
 }
