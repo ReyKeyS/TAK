@@ -841,6 +841,9 @@ namespace TAK
             int wallScore = 0;
             int capstoneScore = 1 - p2_capstones;
             int stackHeightScore = 0;
+            int roadThicknessScore = CalculateRoadThickness(2);
+            int centerControlScore = CalculateCenterControl(2);
+            int blockadeScore = CalculateBlockadeScore(2);
             for (int y = 0; y < 6; y++)
             {
                 for (int x = 0; x < 6; x++)
@@ -860,9 +863,117 @@ namespace TAK
             int totalScore = 2 * flatCountScore +
                              5 * capstoneScore +
                              2 * wallScore +
-                             2 * stackHeightScore;
+                             2 * stackHeightScore +
+                            3 * roadThicknessScore +
+                            3 * centerControlScore + 
+                            4 * blockadeScore;
 
             return totalScore;
         }
+        private int CalculateRoadThickness(int player)
+        {
+            int thickness = 0;
+
+            // Iterasi melalui setiap baris dan kolom
+            for (int i = 0; i < 6; i++)
+            {
+                int rowThickness = 0;
+                int colThickness = 0;
+
+                // Hitung ketebalan jalan pada baris
+                for (int j = 0; j < 6; j++)
+                {
+                    if (board[i, j].Count > 0 && board[i, j][board[i, j].Count - 1].Player == player)
+                        rowThickness++;
+                }
+
+                // Hitung ketebalan jalan pada kolom
+                for (int j = 0; j < 6; j++)
+                {
+                    if (board[j, i].Count > 0 && board[j, i][board[j, i].Count - 1].Player == player)
+                        colThickness++;
+                }
+
+                // Ambil nilai maksimum ketebalan jalan
+                thickness = Math.Max(thickness, Math.Max(rowThickness, colThickness));
+            }
+
+            return thickness;
+        }
+
+        private int CalculateCenterControl(int player)
+        {
+            int control = 0;
+
+            // Iterasi melalui seluruh papan
+            for (int i = 0; i < 6; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    // Periksa apakah sel berada di sekitar pusat
+                    if (Math.Abs(i - 2.5) + Math.Abs(j - 2.5) <= 2)
+                    {
+                        if (board[i, j].Count > 0 && board[i, j][board[i, j].Count - 1].Player == player)
+                            control++;
+                    }
+                }
+            }
+
+            return control;
+        }
+
+        private int CalculateBlockadeScore(int player)
+        {
+            int blockadeScore = 0;
+
+            for (int y = 0; y < 6; y++)
+            {
+                for (int x = 0; x < 6; x++)
+                {
+                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == player)
+                    {
+                        // Check if the current stone contributes to a blockade
+                        if (ContributesToBlockade(y, x, player))
+                        {
+                            blockadeScore++;
+                        }
+                    }
+                }
+            }
+
+            return blockadeScore;
+        }
+
+        private bool ContributesToBlockade(int y, int x, int player)
+        {
+            // Logic to determine if the stone at position (y, x) contributes to a blockade
+            // You need to define your own logic based on your game rules
+
+            // For example, you might check if the stone is surrounded by stones of the same player
+            // on all four sides. If yes, then it contributes to a blockade.
+
+            // This is a simple example, and you may need to adjust it based on your specific game rules.
+
+            bool surrounded = true;
+
+            // Check above
+            if (y > 0 && board[y - 1, x].Count > 0 && board[y - 1, x][board[y - 1, x].Count - 1].Player != player)
+                surrounded = false;
+
+            // Check below
+            if (y < 5 && board[y + 1, x].Count > 0 && board[y + 1, x][board[y + 1, x].Count - 1].Player != player)
+                surrounded = false;
+
+            // Check left
+            if (x > 0 && board[y, x - 1].Count > 0 && board[y, x - 1][board[y, x - 1].Count - 1].Player != player)
+                surrounded = false;
+
+            // Check right
+            if (x < 5 && board[y, x + 1].Count > 0 && board[y, x + 1][board[y, x + 1].Count - 1].Player != player)
+                surrounded = false;
+
+            return surrounded;
+        }
+
     }
 }
