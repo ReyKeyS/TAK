@@ -146,7 +146,9 @@ namespace TAK
                         btnPicked = new List<Button>();
                         // Get Stacked Stone
                         pickedUp = true;
-                        for (int i = 0; i < board[y, x].Count; i++)
+                        int awalIdx = 0;
+                        if (board[y, x].Count > 6) awalIdx = board[y, x].Count - 6;
+                        for (int i = awalIdx; i < board[y, x].Count; i++)
                         {
                             picked.Add(board[y, x][i]);
 
@@ -162,9 +164,19 @@ namespace TAK
                         x_pivot = x;
 
                         // Reset Map
-                        map[y, x].Text = "";
-                        map[y, x].BackColor = Color.White;
-                        board[y, x].Clear();
+                        if (awalIdx == 0)
+                        {
+                            map[y, x].Text = "";
+                            map[y, x].BackColor = Color.White;
+                            board[y, x].Clear();
+                        }
+                        else
+                        {
+                            map[y, x].Text = awalIdx.ToString();
+                            if (board[y, x][awalIdx].Player == 1) map[y, x].BackColor = p1_color;
+                            else map[y, x].BackColor = p2_color;
+                            board[y, x].RemoveRange(awalIdx, 6);
+                        }
                         // Reset btn Stand Stone
                         if (map[y, x].Size.Height != 90)
                         {
@@ -676,7 +688,19 @@ namespace TAK
         // ----------------------    AI    ----------------------
         private void TimerAI_Tick(object sender, EventArgs e)
         {
-            if (!earlyStep_p2 && whosTurn == 2)
+            int triggerawal = 1;
+            //if (!earlyStep_p2 && whosTurn == 2 &&triggerawal==1)
+            //{
+            //    // Minimax with Alpha Beta Pruning
+            //    (int, int, string) bestMove = GetBestMoveForAI();
+
+            //    // Action
+            //    if (bestMove.Item3 == "stand") p2_stand = true;
+            //    else if (bestMove.Item3 == "caps") p2_caps = true;
+            //    ActionClicking(bestMove.Item1, bestMove.Item2);
+            //    triggerawal = 0;
+            //}
+            if (!earlyStep_p2 && whosTurn == 2 && triggerawal == 1)
             {
                 // Minimax with Alpha Beta Pruning
                 (int, int, string) bestMove = GetBestMoveForAI();
@@ -686,7 +710,7 @@ namespace TAK
                 else if (bestMove.Item3 == "caps") p2_caps = true;
                 ActionClicking(bestMove.Item1, bestMove.Item2);                
             }
-            else if (earlyStep_p2 && whosTurn == 2)
+            else if (earlyStep_p2 && whosTurn == 2 && triggerawal == 1)
             {
                 // Randoming the first Step
                 Random rand = new Random();
@@ -761,6 +785,9 @@ namespace TAK
                             moves.Add((y, x, "stand"));
                             if (p2_capstones > 0)
                                 moves.Add((y, x, "caps"));
+                        }else if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                        {
+                            moves.Add((y, x, "pick"));
                         }
                     }
                 }
@@ -827,11 +854,37 @@ namespace TAK
                 board[y, x].Add(new Stone(player, true, false));
             else if (type == "caps")
                 board[y, x].Add(new Stone(player, false, true));
+            else if (type == "pick")
+            {
+                // Get Stacked Stone
+                pickedUp = true;
+                int awalIdx = 0;
+                if (board[y, x].Count > 6) awalIdx = board[y, x].Count - 6;
+                for (int i = awalIdx; i < board[y, x].Count; i++)
+                {
+                    picked.Add(board[y, x][i]);
+                }
+
+                y_pivot = y;
+                x_pivot = x;
+
+                // Reset Map
+                if (awalIdx == 0)
+                {
+                    board[y, x].Clear();
+                }
+                else
+                {
+                    board[y, x].RemoveRange(awalIdx, 6);
+                }
+            }                
         }
 
         private void UndoMove(int y, int x)
         {
-            board[y, x].RemoveAt(board[y, x].Count - 1);
+           
+            if (!pickedUp) { board[y, x].RemoveAt(board[y, x].Count - 1); }
+
         }
 
         private int Evaluate()
