@@ -104,7 +104,7 @@ namespace TAK
                     Button temp = new Button();
                     temp.Name = y + "," + x;
                     temp.Size = new Size(90, 90);
-                    temp.Location = new Point((x * 99)+6, (y * 99)+6);
+                    temp.Location = new Point((x * 99) + 6, (y * 99) + 6);
                     temp.BackColor = Color.White;
                     temp.Font = new Font("Microsoft Sans Serif", 20.25F);
                     temp.Click += Btn_Click;
@@ -141,7 +141,7 @@ namespace TAK
                 }
                 else
                 {
-                    if (board[y, x][board[y, x].Count - 1].Player == whosTurn && !earlyStep_p1 && !earlyStep_p2)
+                    if (board[y, x][board[y, x].Count - 1].Player == whosTurn && !earlyStep_p1 && !earlyStep_p2 && !board[y, x][board[y, x].Count - 1].Stand)
                     {
                         btnPicked = new List<Button>();
                         // Get Stacked Stone
@@ -186,6 +186,10 @@ namespace TAK
                         // Reset btn Capstone
                         if (map[y, x].FlatStyle == FlatStyle.Flat) map[y, x].FlatStyle = FlatStyle.Standard;
                     }
+                    else if (board[y, x][board[y, x].Count - 1].Stand)
+                    {
+                        MessageBox.Show("Stand can't be picked up!");
+                    }
                     else MessageBox.Show("Not Yours");
                 }
             }
@@ -196,7 +200,8 @@ namespace TAK
         {
             if (whosTurn == 1)
             {
-                if (earlyStep_p1) {
+                if (earlyStep_p1)
+                {
                     board[y, x].Add(new Stone(whosTurn, false, false));
                     board[y, x][board[y, x].Count - 1].Player = 2;
                     earlyStep_p1 = false;
@@ -208,9 +213,9 @@ namespace TAK
                 }
                 else
                 {
-                    if (p1_stand)       board[y, x].Add(new Stone(whosTurn, true, false));
-                    else if (p1_caps)   board[y, x].Add(new Stone(whosTurn, false, true));
-                    else                board[y, x].Add(new Stone(whosTurn, false, false));
+                    if (p1_stand) board[y, x].Add(new Stone(whosTurn, true, false));
+                    else if (p1_caps) board[y, x].Add(new Stone(whosTurn, false, true));
+                    else board[y, x].Add(new Stone(whosTurn, false, false));
 
                     if (!p1_caps)
                     {
@@ -243,9 +248,9 @@ namespace TAK
                 }
                 else
                 {
-                    if (p2_stand)       board[y, x].Add(new Stone(whosTurn, true, false));
-                    else if (p2_caps)   board[y, x].Add(new Stone(whosTurn, false, true));
-                    else                board[y, x].Add(new Stone(whosTurn, false, false));
+                    if (p2_stand) board[y, x].Add(new Stone(whosTurn, true, false));
+                    else if (p2_caps) board[y, x].Add(new Stone(whosTurn, false, true));
+                    else board[y, x].Add(new Stone(whosTurn, false, false));
 
                     if (!p2_caps)
                     {
@@ -284,7 +289,7 @@ namespace TAK
                         }
                     }
                     if (board[y, x][board[y, x].Count - 1].Caps) gas = false;
-                }                
+                }
 
                 if (gas)
                 {
@@ -317,14 +322,14 @@ namespace TAK
                     }
                 }
                 else MessageBox.Show("Blocked");
-            } 
+            }
             else MessageBox.Show("Invalid Move");
         }
 
         public bool Valid_Move(int y, int x)
         {
             if (y == y_pivot && x == x_pivot) return true;
-            
+
             if (direction == "")
             {
                 if (((y == y_pivot + 1 || y == y_pivot - 1) && x == x_pivot) || ((x == x_pivot + 1 || x == x_pivot - 1) && y == y_pivot))
@@ -614,7 +619,7 @@ namespace TAK
                         RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
                     if (whosTurn == 2 && !p2_win)
                         RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
-                }   
+                }
             }
         }
 
@@ -707,7 +712,7 @@ namespace TAK
                 // Action
                 if (bestMove.Item3 == "stand") p2_stand = true;
                 else if (bestMove.Item3 == "caps") p2_caps = true;
-                ActionClicking(bestMove.Item1, bestMove.Item2);                
+                ActionClicking(bestMove.Item1, bestMove.Item2);
             }
             else if (earlyStep_p2 && whosTurn == 2 && triggerawal == 1)
             {
@@ -755,22 +760,27 @@ namespace TAK
 
             if (pickedUp)
             {
-                //moves.Add((y_pivot, x_pivot));
+                string tipe = "flat";
+                if (picked[0].Caps)
+                {
+                    tipe = "caps";
+                }
+                moves.Add((y_pivot, x_pivot, tipe));
 
-                //if (direction == "")
-                //{
-                //    moves.Add((y_pivot + 1, x_pivot));
-                //    moves.Add((y_pivot - 1, x_pivot));
-                //    moves.Add((y_pivot, x_pivot + 1));
-                //    moves.Add((y_pivot, x_pivot - 1));
-                //}
-                //else
-                //{
-                //    if (direction == "up") moves.Add((y_pivot - 1, x_pivot));
-                //    if (direction == "down") moves.Add((y_pivot + 1, x_pivot));
-                //    if (direction == "left") moves.Add((y_pivot, x_pivot - 1));
-                //    if (direction == "right") moves.Add((y_pivot, x_pivot + 1));
-                //}
+                if (direction == "")
+                {
+                    moves.Add((y_pivot + 1, x_pivot, tipe));
+                    moves.Add((y_pivot - 1, x_pivot, tipe));
+                    moves.Add((y_pivot, x_pivot + 1, tipe));
+                    moves.Add((y_pivot, x_pivot - 1, tipe));
+                }
+                else
+                {
+                    if (direction == "up") moves.Add((y_pivot - 1, x_pivot, tipe));
+                    if (direction == "down") moves.Add((y_pivot + 1, x_pivot, tipe));
+                    if (direction == "left") moves.Add((y_pivot, x_pivot - 1, tipe));
+                    if (direction == "right") moves.Add((y_pivot, x_pivot + 1, tipe));
+                }
             }
             else
             {
@@ -784,7 +794,8 @@ namespace TAK
                             moves.Add((y, x, "stand"));
                             if (p2_capstones > 0)
                                 moves.Add((y, x, "caps"));
-                        }else if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                        }
+                        else if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
                         {
                             //moves.Add((y, x, "pick"));
                         }
@@ -876,15 +887,35 @@ namespace TAK
                 {
                     board[y, x].RemoveRange(awalIdx, 6);
                 }
-            }                
+            }
         }
 
         private void UndoMove(int y, int x)
         {
-           
-            if (!pickedUp) { board[y, x].RemoveAt(board[y, x].Count - 1); }
+            if (!pickedUp)
+            {
+                // If it's not a "pick" move, undo the regular move
+                board[y, x].RemoveAt(board[y, x].Count - 1);
+            }
+            else
+            {
+                // If it's a "pick" move, undo the effects of the pick
+                pickedUp = false;
 
+                // Restore the picked stones to the square
+                board[y, x].AddRange(picked);
+
+                // Clear the picked list
+                picked.Clear();
+
+                // Reset the map if it was cleared during the pick move
+                if (board[y, x].Count == 6)
+                {
+                    board[y, x].Clear();
+                }
+            }
         }
+
 
         private int Evaluate()
         {
@@ -906,7 +937,7 @@ namespace TAK
                             flatCountScore++;
                         else
                             wallScore++;
-                        
+
                         stackHeightScore = board[y, x].Count;
                     }
                 }
@@ -917,7 +948,7 @@ namespace TAK
                              2 * wallScore +
                              2 * stackHeightScore +
                             3 * roadThicknessScore +
-                            3 * centerControlScore + 
+                            3 * centerControlScore +
                             4 * blockadeScore;
 
             return totalScore;
