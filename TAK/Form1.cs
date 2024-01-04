@@ -896,7 +896,6 @@ namespace TAK
             int roadThicknessScore = CalculateRoadThickness(2);
             int centerControlScore = CalculateCenterControl(2);
             int blockadeScore = CalculateBlockadeScore(2);
-            int stoneHeightScore = CalculateStoneHeightScore(2);
             for (int y = 0; y < 6; y++)
             {
                 for (int x = 0; x < 6; x++)
@@ -919,8 +918,7 @@ namespace TAK
                              2 * stackHeightScore +
                             3 * roadThicknessScore +
                             3 * centerControlScore + 
-                            4 * blockadeScore +
-                            2 * stoneHeightScore;
+                            4 * blockadeScore;
 
             return totalScore;
         }
@@ -1028,31 +1026,6 @@ namespace TAK
 
             return surrounded;
         }
-
-        private int CalculateStoneHeightScore(int player)
-        {
-            int stoneHeightScore = 0;
-
-            // Loop through the board to evaluate stone heights
-            for (int y = 0; y < 6; y++)
-            {
-                for (int x = 0; x < 6; x++)
-                {
-                    // Consider the stones controlled by the specified player
-                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == player)
-                    {
-                        // Check the height of the stack at this position
-                        int stackHeight = board[y, x].Count;
-
-                        // Accumulate the stone height score
-                        stoneHeightScore += stackHeight;
-                    }
-                }
-            }
-
-            return stoneHeightScore;
-        }
-
 
     }
 }
