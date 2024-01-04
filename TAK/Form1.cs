@@ -918,9 +918,9 @@ namespace TAK
                              2 * wallScore +
                              2 * stackHeightScore +
                             3 * roadThicknessScore +
-                            3 * centerControlScore + 
-                            4 * blockadeScore +
-                            2 * stoneHeightScore;
+                            3 * centerControlScore +
+                            4 * blockadeScore;
+                            //2 * stoneHeightScore;
 
             return totalScore;
         }
