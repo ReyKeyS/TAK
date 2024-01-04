@@ -927,6 +927,7 @@ namespace TAK
             int roadThicknessScore = CalculateRoadThickness(2);
             int centerControlScore = CalculateCenterControl(2);
             int blockadeScore = CalculateBlockadeScore(2);
+            int boardStructure = CalculateBoardStructureScore(2);
             for (int y = 0; y < 6; y++)
             {
                 for (int x = 0; x < 6; x++)
@@ -949,7 +950,8 @@ namespace TAK
                              2 * stackHeightScore +
                             3 * roadThicknessScore +
                             3 * centerControlScore +
-                            4 * blockadeScore;
+                            4 * blockadeScore +
+                            5 * boardStructure;
 
             return totalScore;
         }
@@ -1056,6 +1058,73 @@ namespace TAK
                 surrounded = false;
 
             return surrounded;
+        }
+
+        private int CalculateBoardStructureScore(int player)
+        {
+            int structureScore = 0;
+
+            for (int y = 0; y < 6; y++)
+            {
+                for (int x = 0; x < 6; x++)
+                {
+                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == player)
+                    {
+                        // Check if the current stone contributes to the board structure
+                        if (ContributesToBoardStructure(y, x, player))
+                        {
+                            structureScore++;
+                        }
+                    }
+                }
+            }
+
+            return structureScore;
+        }
+
+        private bool ContributesToBoardStructure(int y, int x, int player)
+        {
+            // Logic to determine if the stone at position (y, x) contributes to the board structure
+            // You need to define your own logic based on your game rules
+
+            // For example, you might check if the stone is part of a horizontal or vertical line of stones
+            // that can potentially contribute to a road.
+
+            // This is a simple example, and you may need to adjust it based on your specific game rules.
+
+            // Dummy logic (replace with actual logic based on game rules)
+            bool contributes = false;
+
+            // Check for a potential horizontal line
+            int horizontalStones = CountStonesInDirection(y, x, player, 0, 1) + CountStonesInDirection(y, x, player, 0, -1);
+
+            // Check for a potential vertical line
+            int verticalStones = CountStonesInDirection(y, x, player, 1, 0) + CountStonesInDirection(y, x, player, -1, 0);
+
+            // Adjust the conditions based on your specific game rules
+            if (horizontalStones >= 2 || verticalStones >= 2)
+            {
+                contributes = true;
+            }
+
+            return contributes;
+        }
+
+        private int CountStonesInDirection(int startY, int startX, int player, int deltaY, int deltaX)
+        {
+            // Count the number of stones in a given direction
+            int count = 0;
+            int y = startY + deltaY;
+            int x = startX + deltaX;
+
+            while (y >= 0 && y < 6 && x >= 0 && x < 6 && board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == player)
+            {
+                count++;
+                y += deltaY;
+                x += deltaX;
+            }
+
+            return count;
         }
 
     }
