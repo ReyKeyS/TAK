@@ -553,12 +553,11 @@ namespace TAK
 
             bool win = false;
             // Rows & Columns
-            if (p1_win) { MessageBox.Show("Player 1 Win"); win = true; }
-            else if (p2_win) { MessageBox.Show("Player 2 Win"); win = true; }
+            if (p1_win) { timerAI.Stop(); MessageBox.Show("Player 1 Win"); win = true; }
+            else if (p2_win) { timerAI.Stop(); MessageBox.Show("Player 2 Win"); win = true; }
 
             if (win)
             {
-                timerAI.Stop();
                 DialogResult result = MessageBox.Show("Try Again?", "Alert", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes)
                 {
@@ -787,7 +786,7 @@ namespace TAK
                                 moves.Add((y, x, "caps"));
                         }else if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
                         {
-                            moves.Add((y, x, "pick"));
+                            //moves.Add((y, x, "pick"));
                         }
                     }
                 }
@@ -798,7 +797,7 @@ namespace TAK
 
         private int MinimaxWithAlphaBeta(int depth, bool maximizingPlayer, int alpha, int beta)
         {
-            if (depth == 0)
+            if (depth == 0) // Kurang cek winning
             {
                 // Evaluate the current state (you need to define your own evaluation function)
                 return Evaluate();
