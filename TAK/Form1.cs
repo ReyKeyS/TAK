@@ -912,109 +912,87 @@ namespace TAK
             int wallScore = 0;
             int capstoneScore = 1 - p2_capstones;
             int stackHeightScore = 0;
-            int roadThicknessScore = CalculateRoadThickness(2);
-            int centerControlScore = CalculateCenterControl(2);
-            int blockadeScore = CalculateBlockadeScore(2);
-            int boardStructure = CalculateBoardStructureScore(2);
+            int roadThicknessScore = 0;
+            int centerControlScore = 0;
+            int blockadeScore = 0;
+            int boardStructure = 0;
+
             for (int y = 0; y < 6; y++)
             {
+                int rowThickness = 0;
+                int colThickness = 0;
                 for (int x = 0; x < 6; x++)
                 {
                     if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
                     {
+                        // FlatCount & Wall
                         if (!board[y, x][board[y, x].Count - 1].Stand)
                             flatCountScore++;
                         else
                             wallScore++;
 
+                        // Stack Height
                         stackHeightScore = board[y, x].Count;
-                    }
-                }
-            }
 
-            int totalScore = 2 * flatCountScore +
-                             5 * capstoneScore +
-                             2 * wallScore +
-                             2 * stackHeightScore +
-                            3 * roadThicknessScore +
-                            3 * centerControlScore +
-                            4 * blockadeScore +
-                            5 * boardStructure;
+                        // Road Thickness
+                        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                            rowThickness++;
+                        if (board[x, y].Count > 0 && board[x, y][board[x, y].Count - 1].Player == 2)
+                            colThickness++;
 
-            return totalScore;
-        }
-        private int CalculateRoadThickness(int player)
-        {
-            int thickness = 0;
-
-            // Iterasi melalui setiap baris dan kolom
-            for (int i = 0; i < 6; i++)
-            {
-                int rowThickness = 0;
-                int colThickness = 0;
-
-                // Hitung ketebalan jalan pada baris
-                for (int j = 0; j < 6; j++)
-                {
-                    if (board[i, j].Count > 0 && board[i, j][board[i, j].Count - 1].Player == player)
-                        rowThickness++;
-                }
-
-                // Hitung ketebalan jalan pada kolom
-                for (int j = 0; j < 6; j++)
-                {
-                    if (board[j, i].Count > 0 && board[j, i][board[j, i].Count - 1].Player == player)
-                        colThickness++;
-                }
-
-                // Ambil nilai maksimum ketebalan jalan
-                thickness = Math.Max(thickness, Math.Max(rowThickness, colThickness));
-            }
-
-            return thickness;
-        }
-
-        private int CalculateCenterControl(int player)
-        {
-            int control = 0;
-
-            // Iterasi melalui seluruh papan
-            for (int i = 0; i < 6; i++)
-            {
-                for (int j = 0; j < 6; j++)
-                {
-                    // Periksa apakah sel berada di sekitar pusat
-                    if (Math.Abs(i - 2.5) + Math.Abs(j - 2.5) <= 2)
-                    {
-                        if (board[i, j].Count > 0 && board[i, j][board[i, j].Count - 1].Player == player)
-                            control++;
-                    }
-                }
-            }
-
-            return control;
-        }
-
-        private int CalculateBlockadeScore(int player)
-        {
-            int blockadeScore = 0;
-
-            for (int y = 0; y < 6; y++)
-            {
-                for (int x = 0; x < 6; x++)
-                {
-                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == player)
-                    {
-                        // Check if the current stone contributes to a blockade
-                        if (ContributesToBlockade(y, x, player))
+                        // Center Control
+                        if (Math.Abs(y - 2.5) + Math.Abs(x - 2.5) <= 2)
                         {
-                            blockadeScore++;
+                            if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                                centerControlScore++;
+                        }
+
+                        // Blockade
+                        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                        {
+                            // Check if the current stone contributes to a blockade
+                            if (ContributesToBlockade(y, x, 2))
+                            {
+                                blockadeScore++;
+                            }
+                        }
+
+                        // Board Structure
+                        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                        {
+                            // Check if the current stone contributes to the board structure
+                            if (ContributesToBoardStructure(y, x, 2))
+                            {
+                                boardStructure++;
+                            }
                         }
                     }
                 }
+                roadThicknessScore = Math.Max(roadThicknessScore, Math.Max(rowThickness, colThickness));
             }
 
-            return blockadeScore;
+            int totalScore = 3 * flatCountScore +
+                             6 * capstoneScore +
+                             2 * wallScore +
+                             2 * stackHeightScore +
+                             2 * roadThicknessScore +
+                             4 * centerControlScore +
+                             3 * blockadeScore +
+                             5 * boardStructure;
+
+            CheckWin();
+            if (p2_win)
+            {
+                totalScore += 1000;
+                p2_win = false;
+            }
+            if (p1_win)
+            {
+                totalScore -= 1000;
+                p1_win = false;
+            }
+
+            return totalScore;
         }
 
         private bool ContributesToBlockade(int y, int x, int player)
@@ -1046,28 +1024,6 @@ namespace TAK
                 surrounded = false;
 
             return surrounded;
-        }
-
-        private int CalculateBoardStructureScore(int player)
-        {
-            int structureScore = 0;
-
-            for (int y = 0; y < 6; y++)
-            {
-                for (int x = 0; x < 6; x++)
-                {
-                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == player)
-                    {
-                        // Check if the current stone contributes to the board structure
-                        if (ContributesToBoardStructure(y, x, player))
-                        {
-                            structureScore++;
-                        }
-                    }
-                }
-            }
-
-            return structureScore;
         }
 
         private bool ContributesToBoardStructure(int y, int x, int player)
