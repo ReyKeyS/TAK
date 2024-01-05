@@ -694,12 +694,23 @@ namespace TAK
         {
             if (!earlyStep_p2 && whosTurn == 2)
             {
-                // Minimax with Alpha Beta Pruning
-                (int, int, string) bestMove = GetBestMoveForAI();
+                //// Minimax with Alpha Beta Pruning
+                
+                // Clone
+                List<Stone>[,] clonedBoard = new List<Stone>[6, 6];
+                for (int x = 0; x < 6 * 6; x++)
+                {
+                    int nRow = x / 6;
+                    int nCol = x % 6;
+                    clonedBoard[nRow, nCol] = new List<Stone>(board[nRow, nCol]);
+                }
+
+                (int, int, string) bestMove = GetBestMoveForAI(clonedBoard);
 
                 // Action
                 if (bestMove.Item3 == "stand") p2_stand = true;
                 else if (bestMove.Item3 == "caps") p2_caps = true;
+
                 ActionClicking(bestMove.Item1, bestMove.Item2);
             }
             else if (earlyStep_p2 && whosTurn == 2)
@@ -720,55 +731,62 @@ namespace TAK
             }
         }
 
-        private (int, int, string) GetBestMoveForAI()
+        private (int, int, string) GetBestMoveForAI(List<Stone>[,] clonedBoard)
         {
             int bestEval = int.MinValue;
             (int, int, string) bestMove = (-1, -1, "flat");
 
-            foreach (var move in GetPossibleMoves(2))
+            foreach (var move in GetPossibleMoves(clonedBoard, 2))
             {
-                MakeMove(move.Item1, move.Item2, move.Item3, 2);
+                // Clone
+                List<Stone>[,] newBoard = new List<Stone>[6, 6];
+                for (int x = 0; x < 6 * 6; x++)
+                {
+                    int nRow = x / 6;
+                    int nCol = x % 6;
+                    newBoard[nRow, nCol] = new List<Stone>(clonedBoard[nRow, nCol]);
+                }
 
-                int eval = MinimaxWithAlphaBeta(3, false, int.MinValue, int.MaxValue); // Adjust the depth as needed
+                MakeMove(ref newBoard, move.Item1, move.Item2, move.Item3, 2);
+
+                int eval = MinimaxWithAlphaBeta(newBoard, 3, false, int.MinValue, int.MaxValue); // Adjust the depth as needed
                 if (eval > bestEval)
                 {
                     bestEval = eval;
                     bestMove = move;
                 }
-
-                UndoMove(move.Item1, move.Item2);
             }
 
             return bestMove;
         }
 
-        private List<(int, int, string)> GetPossibleMoves(int player)
+        private List<(int, int, string)> GetPossibleMoves(List<Stone>[,] newBoard, int player)
         {
             List<(int, int, string)> moves = new List<(int, int, string)>();
 
             if (pickedUp)
             {
-                string tipe = "flat";
-                if (picked[0].Caps)
-                {
-                    tipe = "caps";
-                }
-                moves.Add((y_pivot, x_pivot, tipe));
+                //string tipe = "flat";
+                //if (picked[0].Caps)
+                //{
+                //    tipe = "caps";
+                //}
+                //moves.Add((y_pivot, x_pivot, tipe));
 
-                if (direction == "")
-                {
-                    moves.Add((y_pivot + 1, x_pivot, tipe));
-                    moves.Add((y_pivot - 1, x_pivot, tipe));
-                    moves.Add((y_pivot, x_pivot + 1, tipe));
-                    moves.Add((y_pivot, x_pivot - 1, tipe));
-                }
-                else
-                {
-                    if (direction == "up") moves.Add((y_pivot - 1, x_pivot, tipe));
-                    if (direction == "down") moves.Add((y_pivot + 1, x_pivot, tipe));
-                    if (direction == "left") moves.Add((y_pivot, x_pivot - 1, tipe));
-                    if (direction == "right") moves.Add((y_pivot, x_pivot + 1, tipe));
-                }
+                //if (direction == "")
+                //{
+                //    moves.Add((y_pivot + 1, x_pivot, tipe));
+                //    moves.Add((y_pivot - 1, x_pivot, tipe));
+                //    moves.Add((y_pivot, x_pivot + 1, tipe));
+                //    moves.Add((y_pivot, x_pivot - 1, tipe));
+                //}
+                //else
+                //{
+                //    if (direction == "up") moves.Add((y_pivot - 1, x_pivot, tipe));
+                //    if (direction == "down") moves.Add((y_pivot + 1, x_pivot, tipe));
+                //    if (direction == "left") moves.Add((y_pivot, x_pivot - 1, tipe));
+                //    if (direction == "right") moves.Add((y_pivot, x_pivot + 1, tipe));
+                //}
             }
             else
             {
@@ -776,14 +794,14 @@ namespace TAK
                 {
                     for (int x = 0; x < 6; x++)
                     {
-                        if (board[y, x].Count < 1)
+                        if (newBoard[y, x].Count < 1)
                         {
                             moves.Add((y, x, "flat"));
                             moves.Add((y, x, "stand"));
                             if (p2_capstones > 0)
                                 moves.Add((y, x, "caps"));
                         }
-                        else if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                        else if (newBoard[y, x].Count > 0 && newBoard[y, x][newBoard[y, x].Count - 1].Player == player)
                         {
                             //moves.Add((y, x, "pick"));
                         }
@@ -794,26 +812,33 @@ namespace TAK
             return moves;
         }
 
-        private int MinimaxWithAlphaBeta(int depth, bool maximizingPlayer, int alpha, int beta)
+        private int MinimaxWithAlphaBeta(List<Stone>[,] prevBoard, int depth, bool maximizingPlayer, int alpha, int beta)
         {
             if (depth == 0) // Kurang cek winning
             {
                 // Evaluate the current state (you need to define your own evaluation function)
-                return Evaluate();
+                return Evaluate(prevBoard);
             }
 
             if (maximizingPlayer) // Player 2 (AI)
             {
                 int maxEval = int.MinValue;
 
-                foreach (var move in GetPossibleMoves(2))
+                foreach (var move in GetPossibleMoves(prevBoard, 2))
                 {
-                    MakeMove(move.Item1, move.Item2, move.Item3, 2);
+                    // Clone
+                    List<Stone>[,] newBoard = new List<Stone>[6, 6];
+                    for (int x = 0; x < 6 * 6; x++)
+                    {
+                        int nRow = x / 6;
+                        int nCol = x % 6;
+                        newBoard[nRow, nCol] = new List<Stone>(prevBoard[nRow, nCol]);
+                    }
 
-                    int eval = MinimaxWithAlphaBeta(depth - 1, false, alpha, beta);
+                    MakeMove(ref newBoard, move.Item1, move.Item2, move.Item3, 2);
+
+                    int eval = MinimaxWithAlphaBeta(newBoard, depth - 1, false, alpha, beta);
                     maxEval = Math.Max(maxEval, eval);
-
-                    UndoMove(move.Item1, move.Item2);
 
                     alpha = Math.Max(alpha, eval);
                     if (beta <= alpha)
@@ -826,14 +851,21 @@ namespace TAK
             {
                 int minEval = int.MaxValue;
 
-                foreach (var move in GetPossibleMoves(1))
+                foreach (var move in GetPossibleMoves(prevBoard, 1))
                 {
-                    MakeMove(move.Item1, move.Item2, move.Item3, 1);
+                    // Clone
+                    List<Stone>[,] newBoard = new List<Stone>[6, 6];
+                    for (int x = 0; x < 6 * 6; x++)
+                    {
+                        int nRow = x / 6;
+                        int nCol = x % 6;
+                        newBoard[nRow, nCol] = new List<Stone>(prevBoard[nRow, nCol]);
+                    }
 
-                    int eval = MinimaxWithAlphaBeta(depth - 1, true, alpha, beta);
+                    MakeMove(ref newBoard, move.Item1, move.Item2, move.Item3, 1);
+
+                    int eval = MinimaxWithAlphaBeta(newBoard, depth - 1, true, alpha, beta);
                     minEval = Math.Min(minEval, eval);
-
-                    UndoMove(move.Item1, move.Item2);
 
                     beta = Math.Min(beta, eval);
                     if (beta <= alpha)
@@ -844,68 +876,41 @@ namespace TAK
             }
         }
 
-        public void MakeMove(int y, int x, string type, int player)
+        private void MakeMove(ref List<Stone>[,] newBoard, int y, int x, string type, int player)
         {
             if (type == "flat")
-                board[y, x].Add(new Stone(player, false, false));
+                newBoard[y, x].Add(new Stone(player, false, false));
             else if (type == "stand")
-                board[y, x].Add(new Stone(player, true, false));
+                newBoard[y, x].Add(new Stone(player, true, false));
             else if (type == "caps")
-                board[y, x].Add(new Stone(player, false, true));
+                newBoard[y, x].Add(new Stone(player, false, true));
             else if (type == "pick")
             {
-                // Get Stacked Stone
-                pickedUp = true;
-                int awalIdx = 0;
-                if (board[y, x].Count > 6) awalIdx = board[y, x].Count - 6;
-                for (int i = awalIdx; i < board[y, x].Count; i++)
-                {
-                    picked.Add(board[y, x][i]);
-                }
+                //// Get Stacked Stone
+                //pickedUp = true;
+                //int awalIdx = 0;
+                //if (board[y, x].Count > 6) awalIdx = board[y, x].Count - 6;
+                //for (int i = awalIdx; i < board[y, x].Count; i++)
+                //{
+                //    picked.Add(board[y, x][i]);
+                //}
 
-                y_pivot = y;
-                x_pivot = x;
+                //y_pivot = y;
+                //x_pivot = x;
 
-                // Reset Map
-                if (awalIdx == 0)
-                {
-                    board[y, x].Clear();
-                }
-                else
-                {
-                    board[y, x].RemoveRange(awalIdx, 6);
-                }
+                //// Reset Map
+                //if (awalIdx == 0)
+                //{
+                //    board[y, x].Clear();
+                //}
+                //else
+                //{
+                //    board[y, x].RemoveRange(awalIdx, 6);
+                //}
             }
         }
 
-        private void UndoMove(int y, int x)
-        {
-            if (!pickedUp)
-            {
-                // If it's not a "pick" move, undo the regular move
-                board[y, x].RemoveAt(board[y, x].Count - 1);
-            }
-            else
-            {
-                // If it's a "pick" move, undo the effects of the pick
-                pickedUp = false;
-
-                // Restore the picked stones to the square
-                board[y, x].AddRange(picked);
-
-                // Clear the picked list
-                picked.Clear();
-
-                // Reset the map if it was cleared during the pick move
-                if (board[y, x].Count == 6)
-                {
-                    board[y, x].Clear();
-                }
-            }
-        }
-
-
-        private int Evaluate()
+        private int Evaluate(List<Stone>[,] newBoard)
         {
             int flatCountScore = 0;
             int wallScore = 0;
@@ -920,7 +925,7 @@ namespace TAK
             {
                 for (int x = 0; x < 6; x++)
                 {
-                    var currentCell = board[y, x];
+                    var currentCell = newBoard[y, x];
 
                     if (currentCell.Count > 0 && currentCell[currentCell.Count - 1].Player == 2)
                     {
@@ -933,17 +938,17 @@ namespace TAK
 
                         stackHeightScore = currentCell.Count;
 
-                        if (IsPlayerStone(y, x, 2))
+                        if (IsPlayerStone(newBoard, y, x, 2))
                         {
-                            UpdateRoadThickness(y, x, ref roadThicknessScore);
+                            UpdateRoadThickness(newBoard, y, x, ref roadThicknessScore);
 
                             if (IsWithinCenter(y, x))
                                 centerControlScore++;
 
-                            if (ContributesToBlockade(y, x, 2))
+                            if (ContributesToBlockade(newBoard, y, x, 2))
                                 blockadeScore++;
 
-                            if (ContributesToBoardStructure(y, x, 2))
+                            if (ContributesToBoardStructure(newBoard, y, x, 2))
                                 boardStructure++;
                         }
                     }
@@ -969,18 +974,18 @@ namespace TAK
             return totalScore;
         }
 
-        private bool IsPlayerStone(int y, int x, int player)
+        private bool IsPlayerStone(List<Stone>[,] newBoard, int y, int x, int player)
         {
-            return board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == player;
+            return newBoard[y, x].Count > 0 && newBoard[y, x][newBoard[y, x].Count - 1].Player == player;
         }
 
-        private void UpdateRoadThickness(int y, int x, ref int roadThicknessScore)
+        private void UpdateRoadThickness(List<Stone>[,] newBoard, int y, int x, ref int roadThicknessScore)
         {
-            int rowThickness = (x > 0 && IsPlayerStone(y, x - 1, 2)) ? 1 : 0;
-            rowThickness += (x < 5 && IsPlayerStone(y, x + 1, 2)) ? 1 : 0;
+            int rowThickness = (x > 0 && IsPlayerStone(newBoard, y, x - 1, 2)) ? 1 : 0;
+            rowThickness += (x < 5 && IsPlayerStone(newBoard, y, x + 1, 2)) ? 1 : 0;
 
-            int colThickness = (y > 0 && IsPlayerStone(y - 1, x, 2)) ? 1 : 0;
-            colThickness += (y < 5 && IsPlayerStone(y + 1, x, 2)) ? 1 : 0;
+            int colThickness = (y > 0 && IsPlayerStone(newBoard, y - 1, x, 2)) ? 1 : 0;
+            colThickness += (y < 5 && IsPlayerStone(newBoard, y + 1, x, 2)) ? 1 : 0;
 
             roadThicknessScore = Math.Max(roadThicknessScore, Math.Max(rowThickness, colThickness));
         }
@@ -990,28 +995,28 @@ namespace TAK
             return Math.Abs(y - 2.5) + Math.Abs(x - 2.5) <= 2;
         }
 
-        private bool ContributesToBlockade(int y, int x, int player)
+        private bool ContributesToBlockade(List<Stone>[,] newBoard, int y, int x, int player)
         {
             bool surrounded = true;
 
-            if (y > 0 && board[y - 1, x].Count > 0 && board[y - 1, x][board[y - 1, x].Count - 1].Player != player)
+            if (y > 0 && newBoard[y - 1, x].Count > 0 && newBoard[y - 1, x][newBoard[y - 1, x].Count - 1].Player != player)
                 surrounded = false;
-            if (y < 5 && board[y + 1, x].Count > 0 && board[y + 1, x][board[y + 1, x].Count - 1].Player != player)
+            if (y < 5 && newBoard[y + 1, x].Count > 0 && newBoard[y + 1, x][newBoard[y + 1, x].Count - 1].Player != player)
                 surrounded = false;
-            if (x > 0 && board[y, x - 1].Count > 0 && board[y, x - 1][board[y, x - 1].Count - 1].Player != player)
+            if (x > 0 && newBoard[y, x - 1].Count > 0 && newBoard[y, x - 1][newBoard[y, x - 1].Count - 1].Player != player)
                 surrounded = false;
-            if (x < 5 && board[y, x + 1].Count > 0 && board[y, x + 1][board[y, x + 1].Count - 1].Player != player)
+            if (x < 5 && newBoard[y, x + 1].Count > 0 && newBoard[y, x + 1][newBoard[y, x + 1].Count - 1].Player != player)
                 surrounded = false;
 
             return surrounded;
         }
 
-        private bool ContributesToBoardStructure(int y, int x, int player)
+        private bool ContributesToBoardStructure(List<Stone>[,] newBoard, int y, int x, int player)
         {
             bool contributes = false;
 
-            int horizontalStones = CountStonesInDirection(y, x, player, 0, 1) + CountStonesInDirection(y, x, player, 0, -1);
-            int verticalStones = CountStonesInDirection(y, x, player, 1, 0) + CountStonesInDirection(y, x, player, -1, 0);
+            int horizontalStones = CountStonesInDirection(newBoard, y, x, player, 0, 1) + CountStonesInDirection(newBoard, y, x, player, 0, -1);
+            int verticalStones = CountStonesInDirection(newBoard, y, x, player, 1, 0) + CountStonesInDirection(newBoard, y, x, player, -1, 0);
 
             if (horizontalStones >= 2 || verticalStones >= 2)
             {
@@ -1021,13 +1026,13 @@ namespace TAK
             return contributes;
         }
 
-        private int CountStonesInDirection(int startY, int startX, int player, int deltaY, int deltaX)
+        private int CountStonesInDirection(List<Stone>[,] newBoard, int startY, int startX, int player, int deltaY, int deltaX)
         {
             int count = 0;
             int y = startY + deltaY;
             int x = startX + deltaX;
 
-            while (y >= 0 && y < 6 && x >= 0 && x < 6 && board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == player)
+            while (y >= 0 && y < 6 && x >= 0 && x < 6 && newBoard[y, x].Count > 0 && newBoard[y, x][newBoard[y, x].Count - 1].Player == player)
             {
                 count++;
                 y += deltaY;
@@ -1036,8 +1041,6 @@ namespace TAK
 
             return count;
         }
-
-
 
     }
 }
