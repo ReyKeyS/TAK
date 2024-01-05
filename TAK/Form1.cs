@@ -692,19 +692,7 @@ namespace TAK
         // ----------------------    AI    ----------------------
         private void TimerAI_Tick(object sender, EventArgs e)
         {
-            int triggerawal = 1;
-            //if (!earlyStep_p2 && whosTurn == 2 &&triggerawal==1)
-            //{
-            //    // Minimax with Alpha Beta Pruning
-            //    (int, int, string) bestMove = GetBestMoveForAI();
-
-            //    // Action
-            //    if (bestMove.Item3 == "stand") p2_stand = true;
-            //    else if (bestMove.Item3 == "caps") p2_caps = true;
-            //    ActionClicking(bestMove.Item1, bestMove.Item2);
-            //    triggerawal = 0;
-            //}
-            if (!earlyStep_p2 && whosTurn == 2 && triggerawal == 1)
+            if (!earlyStep_p2 && whosTurn == 2)
             {
                 // Minimax with Alpha Beta Pruning
                 (int, int, string) bestMove = GetBestMoveForAI();
@@ -714,7 +702,7 @@ namespace TAK
                 else if (bestMove.Item3 == "caps") p2_caps = true;
                 ActionClicking(bestMove.Item1, bestMove.Item2);
             }
-            else if (earlyStep_p2 && whosTurn == 2 && triggerawal == 1)
+            else if (earlyStep_p2 && whosTurn == 2)
             {
                 // Randoming the first Step
                 Random rand = new Random();
