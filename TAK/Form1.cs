@@ -907,7 +907,6 @@ namespace TAK
 
         private int Evaluate()
         {
-            // SAMPAH
             int flatCountScore = 0;
             int wallScore = 0;
             int capstoneScore = 1 - p2_capstones;
@@ -919,66 +918,41 @@ namespace TAK
 
             for (int y = 0; y < 6; y++)
             {
-                int rowThickness = 0;
-                int colThickness = 0;
                 for (int x = 0; x < 6; x++)
                 {
-                    if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                    var currentCell = board[y, x];
+
+                    if (currentCell.Count > 0 && currentCell[currentCell.Count - 1].Player == 2)
                     {
-                        // FlatCount & Wall
-                        if (!board[y, x][board[y, x].Count - 1].Stand)
+                        var currentStone = currentCell[currentCell.Count - 1];
+
+                        if (!currentStone.Stand)
                             flatCountScore++;
                         else
                             wallScore++;
 
-                        // Stack Height
-                        stackHeightScore = board[y, x].Count;
+                        stackHeightScore = currentCell.Count;
 
-                        // Road Thickness
-                        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
-                            rowThickness++;
-                        if (board[x, y].Count > 0 && board[x, y][board[x, y].Count - 1].Player == 2)
-                            colThickness++;
-
-                        // Center Control
-                        if (Math.Abs(y - 2.5) + Math.Abs(x - 2.5) <= 2)
+                        if (IsPlayerStone(y, x, 2))
                         {
-                            if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
+                            UpdateRoadThickness(y, x, ref roadThicknessScore);
+
+                            if (IsWithinCenter(y, x))
                                 centerControlScore++;
-                        }
 
-                        // Blockade
-                        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
-                        {
-                            // Check if the current stone contributes to a blockade
                             if (ContributesToBlockade(y, x, 2))
-                            {
                                 blockadeScore++;
-                            }
-                        }
 
-                        // Board Structure
-                        if (board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == 2)
-                        {
-                            // Check if the current stone contributes to the board structure
                             if (ContributesToBoardStructure(y, x, 2))
-                            {
                                 boardStructure++;
-                            }
                         }
                     }
                 }
-                roadThicknessScore = Math.Max(roadThicknessScore, Math.Max(rowThickness, colThickness));
             }
 
-            int totalScore = 3 * flatCountScore +
-                             6 * capstoneScore +
-                             2 * wallScore +
-                             2 * stackHeightScore +
-                             2 * roadThicknessScore +
-                             4 * centerControlScore +
-                             3 * blockadeScore +
-                             5 * boardStructure;
+            int totalScore = 3 * flatCountScore + 6 * capstoneScore + 2 * wallScore +
+                             2 * stackHeightScore + 2 * roadThicknessScore +
+                             4 * centerControlScore + 3 * blockadeScore + 5 * boardStructure;
 
             CheckWin();
             if (p2_win)
@@ -995,31 +969,37 @@ namespace TAK
             return totalScore;
         }
 
+        private bool IsPlayerStone(int y, int x, int player)
+        {
+            return board[y, x].Count > 0 && board[y, x][board[y, x].Count - 1].Player == player;
+        }
+
+        private void UpdateRoadThickness(int y, int x, ref int roadThicknessScore)
+        {
+            int rowThickness = (x > 0 && IsPlayerStone(y, x - 1, 2)) ? 1 : 0;
+            rowThickness += (x < 5 && IsPlayerStone(y, x + 1, 2)) ? 1 : 0;
+
+            int colThickness = (y > 0 && IsPlayerStone(y - 1, x, 2)) ? 1 : 0;
+            colThickness += (y < 5 && IsPlayerStone(y + 1, x, 2)) ? 1 : 0;
+
+            roadThicknessScore = Math.Max(roadThicknessScore, Math.Max(rowThickness, colThickness));
+        }
+
+        private bool IsWithinCenter(int y, int x)
+        {
+            return Math.Abs(y - 2.5) + Math.Abs(x - 2.5) <= 2;
+        }
+
         private bool ContributesToBlockade(int y, int x, int player)
         {
-            // Logic to determine if the stone at position (y, x) contributes to a blockade
-            // You need to define your own logic based on your game rules
-
-            // For example, you might check if the stone is surrounded by stones of the same player
-            // on all four sides. If yes, then it contributes to a blockade.
-
-            // This is a simple example, and you may need to adjust it based on your specific game rules.
-
             bool surrounded = true;
 
-            // Check above
             if (y > 0 && board[y - 1, x].Count > 0 && board[y - 1, x][board[y - 1, x].Count - 1].Player != player)
                 surrounded = false;
-
-            // Check below
             if (y < 5 && board[y + 1, x].Count > 0 && board[y + 1, x][board[y + 1, x].Count - 1].Player != player)
                 surrounded = false;
-
-            // Check left
             if (x > 0 && board[y, x - 1].Count > 0 && board[y, x - 1][board[y, x - 1].Count - 1].Player != player)
                 surrounded = false;
-
-            // Check right
             if (x < 5 && board[y, x + 1].Count > 0 && board[y, x + 1][board[y, x + 1].Count - 1].Player != player)
                 surrounded = false;
 
@@ -1028,24 +1008,11 @@ namespace TAK
 
         private bool ContributesToBoardStructure(int y, int x, int player)
         {
-            // Logic to determine if the stone at position (y, x) contributes to the board structure
-            // You need to define your own logic based on your game rules
-
-            // For example, you might check if the stone is part of a horizontal or vertical line of stones
-            // that can potentially contribute to a road.
-
-            // This is a simple example, and you may need to adjust it based on your specific game rules.
-
-            // Dummy logic (replace with actual logic based on game rules)
             bool contributes = false;
 
-            // Check for a potential horizontal line
             int horizontalStones = CountStonesInDirection(y, x, player, 0, 1) + CountStonesInDirection(y, x, player, 0, -1);
-
-            // Check for a potential vertical line
             int verticalStones = CountStonesInDirection(y, x, player, 1, 0) + CountStonesInDirection(y, x, player, -1, 0);
 
-            // Adjust the conditions based on your specific game rules
             if (horizontalStones >= 2 || verticalStones >= 2)
             {
                 contributes = true;
@@ -1056,7 +1023,6 @@ namespace TAK
 
         private int CountStonesInDirection(int startY, int startX, int player, int deltaY, int deltaX)
         {
-            // Count the number of stones in a given direction
             int count = 0;
             int y = startY + deltaY;
             int x = startX + deltaX;
@@ -1070,6 +1036,8 @@ namespace TAK
 
             return count;
         }
+
+
 
     }
 }
