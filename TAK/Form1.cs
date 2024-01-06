@@ -7,6 +7,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -692,7 +693,7 @@ namespace TAK
         // ----------------------    AI    ----------------------
         private void TimerAI_Tick(object sender, EventArgs e)
         {
-            if (!earlyStep_p2 && whosTurn == 2)
+            if (whosTurn == 2)
             {
                 //// Minimax with Alpha Beta Pruning
                 
@@ -705,38 +706,48 @@ namespace TAK
                     clonedBoard[nRow, nCol] = new List<Stone>(board[nRow, nCol]);
                 }
 
-                (int, int, string) bestMove = GetBestMoveForAI(clonedBoard);
+                List<(int, int, string)> bestMove = GetBestMoveForAI(clonedBoard);
 
                 // Action
-                if (bestMove.Item3 == "stand") p2_stand = true;
-                else if (bestMove.Item3 == "caps") p2_caps = true;
-
-                ActionClicking(bestMove.Item1, bestMove.Item2);
-            }
-            else if (earlyStep_p2 && whosTurn == 2)
-            {
-                // Randoming the first Step
-                Random rand = new Random();
-                int y, x;
-                bool randoming = true;
-                do
+                foreach (var move in bestMove)
                 {
-                    y = rand.Next(0, 6);
-                    x = rand.Next(0, 6);
-                    randoming = false;
-                    if (board[y, x].Count > 0) randoming = true;
-                } while (randoming);
+                    if (move.Item3 == "stand") p2_stand = true;
+                    else if (move.Item3 == "caps") p2_caps = true;
 
-                ActionClicking(y, x);
+                    timerAI.Stop();
+                    MessageBox.Show("Result : " + move.Item1.ToString() + " - " + move.Item2.ToString() + "\nTipe : " + move.Item3.ToString());
+                    timerAI.Start();
+
+                    ActionClicking(move.Item1, move.Item2);
+
+                    p2_caps = false;
+                    p2_stand = false;
+                }
             }
+            //else if (earlyStep_p2 && whosTurn == 2)
+            //{
+            //    // Randoming the first Step
+            //    Random rand = new Random();
+            //    int y, x;
+            //    bool randoming = true;
+            //    do
+            //    {
+            //        y = rand.Next(1, 5);
+            //        x = rand.Next(1, 5);
+            //        randoming = false;
+            //        if (board[y, x].Count > 0) randoming = true;
+            //    } while (randoming);
+
+            //    ActionClicking(y, x);
+            //}
         }
 
-        private (int, int, string) GetBestMoveForAI(List<Stone>[,] clonedBoard)
+        private List<(int, int, string)> GetBestMoveForAI(List<Stone>[,] clonedBoard)
         {
             int bestEval = int.MinValue;
-            (int, int, string) bestMove = (-1, -1, "flat");
+            List<(int, int, string)> bestMove = new List<(int, int, string)> { (-1, -1, "flat") };
 
-            foreach (var move in GetPossibleMoves(clonedBoard, 2))
+            foreach (var moves in GetPossibleMoves(clonedBoard, 2, p1_stones, p1_capstones, p2_stones, p2_capstones))
             {
                 // Clone
                 List<Stone>[,] newBoard = new List<Stone>[6, 6];
@@ -747,63 +758,203 @@ namespace TAK
                     newBoard[nRow, nCol] = new List<Stone>(clonedBoard[nRow, nCol]);
                 }
 
-                MakeMove(ref newBoard, move.Item1, move.Item2, move.Item3, 2);
+                int p1_sisaStone = p1_stones;
+                int p1_sisaCaps = p1_capstones;
+                int p2_sisaStone = p2_stones;
+                int p2_sisaCaps = p2_capstones;
 
-                int eval = MinimaxWithAlphaBeta(newBoard, 3, false, int.MinValue, int.MaxValue); // Adjust the depth as needed
+                MakeMove(ref newBoard, moves, 2, ref p1_sisaStone, ref p1_sisaCaps, ref p2_sisaStone, ref p2_sisaCaps);
+
+                int eval = MinimaxWithAlphaBeta(newBoard, 3, false, int.MinValue, int.MaxValue, p1_sisaStone, p1_sisaCaps, p2_sisaStone, p2_sisaCaps); // Adjust the depth as needed
                 if (eval > bestEval)
                 {
                     bestEval = eval;
-                    bestMove = move;
+                    bestMove = moves;
+
+                    //timerAI.Stop();
+                    //MessageBox.Show("Best Eval : " + bestMove[0].Item1.ToString() + " - " + bestMove[0].Item2.ToString() + "\nTipe : " + bestMove[0].Item3.ToString());
+                    //timerAI.Start();
                 }
             }
 
             return bestMove;
         }
 
-        private List<(int, int, string)> GetPossibleMoves(List<Stone>[,] newBoard, int player)
+        private List<List<(int, int, string)>> GetPossibleMoves(List<Stone>[,] newBoard, int player, int p1_sisaStone, int p1_sisaCaps, int p2_sisaStone, int p2_sisaCaps)
         {
-            List<(int, int, string)> moves = new List<(int, int, string)>();
+            List<List<(int, int, string)>> moves = new List<List<(int, int, string)>>();
 
-            if (pickedUp)
+            for (int ij = 0; ij < 6 * 6; ij++)
             {
-                //string tipe = "flat";
-                //if (picked[0].Caps)
-                //{
-                //    tipe = "caps";
-                //}
-                //moves.Add((y_pivot, x_pivot, tipe));
+                int y = ij / 6;
+                int x = ij % 6;
 
-                //if (direction == "")
-                //{
-                //    moves.Add((y_pivot + 1, x_pivot, tipe));
-                //    moves.Add((y_pivot - 1, x_pivot, tipe));
-                //    moves.Add((y_pivot, x_pivot + 1, tipe));
-                //    moves.Add((y_pivot, x_pivot - 1, tipe));
-                //}
-                //else
-                //{
-                //    if (direction == "up") moves.Add((y_pivot - 1, x_pivot, tipe));
-                //    if (direction == "down") moves.Add((y_pivot + 1, x_pivot, tipe));
-                //    if (direction == "left") moves.Add((y_pivot, x_pivot - 1, tipe));
-                //    if (direction == "right") moves.Add((y_pivot, x_pivot + 1, tipe));
-                //}
-            }
-            else
-            {
-                for (int y = 0; y < 6; y++)
+                if (newBoard[y, x].Count < 1)
                 {
-                    for (int x = 0; x < 6; x++)
+                    // Chance place Flat & Stand
+                    if ((player == 1 && p1_sisaStone > 0) || (player == 2 && p2_sisaStone > 0))
                     {
-                        if (newBoard[y, x].Count < 1)
+                        List<(int, int, string)> inside = new List<(int, int, string)>
                         {
-                            moves.Add((y, x, "flat"));
-                            moves.Add((y, x, "stand"));
-                            if (p2_capstones > 0)
-                                moves.Add((y, x, "caps"));
+                            (y, x, "flat")
+                        };
+                        moves.Add(inside);
+
+                        inside = new List<(int, int, string)>
+                        {
+                            (y, x, "stand")
+                        };
+                        moves.Add(inside);
+                    }
+                    // Chance place Capstone
+                    if ((player == 1 && p1_sisaCaps > 0) || (player == 2 && p2_sisaCaps > 0))
+                    {
+                        List<(int, int, string)> inside = new List<(int, int, string)>
+                        {
+                            (y, x, "caps")
+                        };
+                        moves.Add(inside);
+                    }
+                }
+                else if (newBoard[y, x].Count > 0 && newBoard[y, x][newBoard[y, x].Count - 1].Player == player && !newBoard[y, x][newBoard[y, x].Count - 1].Stand)
+                {
+                    // Pick Up
+                    List<Stone> stacked = newBoard[y, x];
+                    int height = newBoard[y, x].Count;
+                    if (height > 6) height = 6;
+                    List<List<int>> allPlaces = GetAllPlaces(height);
+
+                    int top = y;
+                    int bottom = (6 - 1) - y;
+                    int left = x;
+                    int right = (6 - 1) - x;
+
+                    List<(int, int, string)> inside;
+                    for (int i = 0; i < allPlaces.Count; i++)
+                    {
+                        // Top
+                        inside = new List<(int, int, string)> { (y, x, "pick") };
+                        height = newBoard[y, x].Count;
+                        if (allPlaces[i].Count <= top)
+                        {
+                            for (int j = 1; j <= allPlaces[i].Count; j++)
+                            {
+                                bool gas = true;
+                                for (int k = 0; k < allPlaces[i][j - 1]; k++)
+                                {
+                                    if (newBoard[y - j, x].Count > 0)
+                                    {
+                                        Stone topBoard = newBoard[y - j, x][newBoard[y - j, x].Count - 1];
+                                        Stone curBoard = stacked[stacked.Count - height];
+                                        if (!topBoard.Caps || !topBoard.Stand || (topBoard.Stand && curBoard.Caps))
+                                        {
+                                            inside.Add((y - j, x, "pick"));
+                                            height--;
+                                        }
+                                        else
+                                            gas = false;
+                                    }
+                                    //else {
+                                    //    inside.Add((y - j, x, "pick"));
+                                    //    height--;
+                                    //}
+                                }
+                                if (gas) moves.Add(inside);
+                            }
                         }
-                        else if (newBoard[y, x].Count > 0 && newBoard[y, x][newBoard[y, x].Count - 1].Player == player)
+
+                        // Buttom
+                        inside = new List<(int, int, string)> { (y, x, "pick") };
+                        height = newBoard[y, x].Count;
+                        if (allPlaces[i].Count <= bottom)
                         {
-                            //moves.Add((y, x, "pick"));
+                            for (int j = 1; j <= allPlaces[i].Count; j++)
+                            {
+                                bool gas = true;
+                                for (int k = 0; k < allPlaces[i][j - 1]; k++)
+                                {
+                                    if (newBoard[y + j, x].Count > 0)
+                                    {
+                                        Stone bottomBoard = newBoard[y + j, x][newBoard[y + j, x].Count - 1];
+                                        Stone curBoard = stacked[stacked.Count - height];
+                                        if (!bottomBoard.Caps || !bottomBoard.Stand || (bottomBoard.Stand && curBoard.Caps))
+                                        {
+                                            inside.Add((y + j, x, "pick"));
+                                            height--;
+                                        }
+                                        else
+                                            gas = false;
+                                    }
+                                    //else
+                                    //{
+                                    //    inside.Add((y + j, x, "pick"));
+                                    //    height--;
+                                    //}
+                                }
+                                if (gas) moves.Add(inside);
+                            }
+                        }
+
+                        // Left
+                        inside = new List<(int, int, string)> { (y, x, "pick") };
+                        height = newBoard[y, x].Count;
+                        if (allPlaces[i].Count <= left)
+                        {
+                            for (int j = 1; j <= allPlaces[i].Count; j++)
+                            {
+                                bool gas = true;
+                                for (int k = 0; k < allPlaces[i][j - 1]; k++)
+                                {
+                                    if (newBoard[y, x - 1].Count > 0)
+                                    {
+                                        Stone leftBoard = newBoard[y, x - 1][newBoard[y, x - 1].Count - 1];
+                                        Stone curBoard = stacked[stacked.Count - height];
+                                        if (!leftBoard.Caps || !leftBoard.Stand || (leftBoard.Stand && curBoard.Caps))
+                                        {
+                                            inside.Add((y, x - 1, "pick"));
+                                            height--;
+                                        }
+                                        else
+                                            gas = false;
+                                    }
+                                    //else {
+                                    //    inside.Add((y, x - 1, "pick"));
+                                    //    height--;
+                                    //}
+                                }
+                                if (gas) moves.Add(inside);
+                            }
+                        }
+
+                        // Right
+                        inside = new List<(int, int, string)> { (y, x, "pick") };
+                        height = newBoard[y, x].Count;
+                        if (allPlaces[i].Count <= right)
+                        {
+                            for (int j = 1; j <= allPlaces[i].Count; j++)
+                            {
+                                bool gas = true;
+                                for (int k = 0; k < allPlaces[i][j - 1]; k++)
+                                {
+                                    if (newBoard[y, x + 1].Count > 0)
+                                    {
+                                        Stone rightBoard = newBoard[y, x + 1][newBoard[y, x + 1].Count - 1];
+                                        Stone curBoard = stacked[stacked.Count - height];
+                                        if (!rightBoard.Caps || !rightBoard.Stand || (rightBoard.Stand && curBoard.Caps))
+                                        {
+                                            inside.Add((y, x + 1, "pick"));
+                                            height--;
+                                        }
+                                        else
+                                            gas = false;
+                                    }
+                                    //else {
+                                    //    inside.Add((y, x + 1, "pick"));
+                                    //    height--;
+                                    //}
+                                }
+                                if (gas) moves.Add(inside);
+                            }
                         }
                     }
                 }
@@ -812,19 +963,59 @@ namespace TAK
             return moves;
         }
 
-        private int MinimaxWithAlphaBeta(List<Stone>[,] prevBoard, int depth, bool maximizingPlayer, int alpha, int beta)
+        private List<List<int>> GetAllPlaces(int height)
         {
-            if (depth == 0) // Kurang cek winning
+            List<List<int>> places = new List<List<int>>();
+
+            if (height <= 0)
+                return places;
+
+            if (height == 1)
             {
-                // Evaluate the current state (you need to define your own evaluation function)
-                return Evaluate(prevBoard);
+                List<int> temp1 = new List<int> { 1 };
+                places.Add(temp1);
+                return places;
+            }
+
+            for (int i = 1; i < height; i++)
+            {
+                int j = height - i;
+                List<int> temp2 = new List<int>();
+                List<List<int>> part = GetAllPlaces(j);
+
+                foreach (var partition in part)
+                {
+                    temp2 = new List<int>(partition);
+                    temp2.Insert(0, i);
+                    places.Add(temp2);
+                }
+            }
+
+            List<int> temp3 = new List<int> { height };
+            places.Add(temp3);
+            return places;
+        }
+
+        private int MinimaxWithAlphaBeta(List<Stone>[,] prevBoard, int depth, bool maximizingPlayer, int alpha, int beta, int p1_sisaStone, int p1_sisaCaps, int p2_sisaStone, int p2_sisaCaps)
+        {
+            CheckWin();
+            if (p1_win || p2_win)
+            {
+                p1_win = false;
+                p2_win = false;
+                return Evaluate(prevBoard, p1_sisaCaps, p2_sisaCaps);
+            }
+
+            if (depth == 0)
+            {
+                return Evaluate(prevBoard, p1_sisaCaps, p2_sisaCaps);
             }
 
             if (maximizingPlayer) // Player 2 (AI)
             {
                 int maxEval = int.MinValue;
 
-                foreach (var move in GetPossibleMoves(prevBoard, 2))
+                foreach (var moves in GetPossibleMoves(prevBoard, 2, p1_sisaStone, p1_sisaCaps, p2_sisaStone, p2_sisaCaps))
                 {
                     // Clone
                     List<Stone>[,] newBoard = new List<Stone>[6, 6];
@@ -835,9 +1026,14 @@ namespace TAK
                         newBoard[nRow, nCol] = new List<Stone>(prevBoard[nRow, nCol]);
                     }
 
-                    MakeMove(ref newBoard, move.Item1, move.Item2, move.Item3, 2);
+                    int p1_sisaStone_rec = p1_stones;
+                    int p1_sisaCaps_rec = p1_capstones;
+                    int p2_sisaStone_rec = p2_stones;
+                    int p2_sisaCaps_rec = p2_capstones;
 
-                    int eval = MinimaxWithAlphaBeta(newBoard, depth - 1, false, alpha, beta);
+                    MakeMove(ref newBoard, moves, 2, ref p1_sisaStone_rec, ref p1_sisaCaps_rec, ref p2_sisaStone_rec, ref p2_sisaCaps_rec);
+
+                    int eval = MinimaxWithAlphaBeta(newBoard, depth - 1, false, alpha, beta, p1_sisaStone_rec, p1_sisaCaps_rec, p2_sisaStone_rec, p2_sisaCaps_rec);
                     maxEval = Math.Max(maxEval, eval);
 
                     alpha = Math.Max(alpha, eval);
@@ -851,7 +1047,7 @@ namespace TAK
             {
                 int minEval = int.MaxValue;
 
-                foreach (var move in GetPossibleMoves(prevBoard, 1))
+                foreach (var moves in GetPossibleMoves(prevBoard, 1, p1_sisaStone, p1_sisaCaps, p2_sisaStone, p2_sisaCaps))
                 {
                     // Clone
                     List<Stone>[,] newBoard = new List<Stone>[6, 6];
@@ -862,9 +1058,14 @@ namespace TAK
                         newBoard[nRow, nCol] = new List<Stone>(prevBoard[nRow, nCol]);
                     }
 
-                    MakeMove(ref newBoard, move.Item1, move.Item2, move.Item3, 1);
+                    int p1_sisaStone_rec = p1_stones;
+                    int p1_sisaCaps_rec = p1_capstones;
+                    int p2_sisaStone_rec = p2_stones;
+                    int p2_sisaCaps_rec = p2_capstones;
 
-                    int eval = MinimaxWithAlphaBeta(newBoard, depth - 1, true, alpha, beta);
+                    MakeMove(ref newBoard, moves, 1, ref p1_sisaStone_rec, ref p1_sisaCaps_rec, ref p2_sisaStone_rec, ref p2_sisaCaps_rec);
+
+                    int eval = MinimaxWithAlphaBeta(newBoard, depth - 1, true, alpha, beta, p1_sisaStone_rec, p1_sisaCaps_rec, p2_sisaStone_rec, p2_sisaCaps_rec);
                     minEval = Math.Min(minEval, eval);
 
                     beta = Math.Min(beta, eval);
@@ -876,45 +1077,65 @@ namespace TAK
             }
         }
 
-        private void MakeMove(ref List<Stone>[,] newBoard, int y, int x, string type, int player)
+        private void MakeMove(ref List<Stone>[,] newBoard, List<(int, int, string)> moves, int player, ref int p1_sisaStone, ref int p1_sisaCaps, ref int p2_sisaStone, ref int p2_sisaCaps)
         {
-            if (type == "flat")
-                newBoard[y, x].Add(new Stone(player, false, false));
-            else if (type == "stand")
-                newBoard[y, x].Add(new Stone(player, true, false));
-            else if (type == "caps")
-                newBoard[y, x].Add(new Stone(player, false, true));
-            else if (type == "pick")
+            if (moves.Count == 1)
             {
-                //// Get Stacked Stone
-                //pickedUp = true;
-                //int awalIdx = 0;
-                //if (board[y, x].Count > 6) awalIdx = board[y, x].Count - 6;
-                //for (int i = awalIdx; i < board[y, x].Count; i++)
-                //{
-                //    picked.Add(board[y, x][i]);
-                //}
+                (int, int, string) move = moves[0];
+                int y = move.Item1;
+                int x = move.Item2;
+                string type = move.Item3;
 
-                //y_pivot = y;
-                //x_pivot = x;
-
-                //// Reset Map
-                //if (awalIdx == 0)
-                //{
-                //    board[y, x].Clear();
-                //}
-                //else
-                //{
-                //    board[y, x].RemoveRange(awalIdx, 6);
-                //}
+                if (type == "flat")
+                {
+                    newBoard[y, x].Add(new Stone(player, false, false));
+                    if (player == 1) p1_sisaStone--; else if (player == 2) p2_sisaStone--;
+                }
+                else if (type == "stand")
+                {
+                    newBoard[y, x].Add(new Stone(player, true, false));
+                    if (player == 1) p1_sisaStone--; else if (player == 2) p2_sisaStone--;
+                }
+                else if (type == "caps")
+                {
+                    newBoard[y, x].Add(new Stone(player, false, true));
+                    if (player == 1) p1_sisaCaps--; else if (player == 2) p2_sisaCaps--;
+                }
             }
+            else if (moves.Count > 1)
+            {
+                (int, int, string) move = moves[0];
+                int y = move.Item1;
+                int x = move.Item2;
+
+                int awalIdx = 0;
+                if (newBoard[y, x].Count > 6) awalIdx = newBoard[y, x].Count - 6;
+                for (int i = awalIdx; i < newBoard[y, x].Count; i++)
+                {
+                    picked.Add(newBoard[y, x][i]);
+                }
+                if (awalIdx == 0)
+                    newBoard[y, x].Clear();
+                else
+                    newBoard[y, x].RemoveRange(awalIdx, 6);        
+
+                for (int i = 1; i < moves.Count; i++)
+                {
+                    (int, int, string) move2 = moves[i];
+                    y = move2.Item1;
+                    x = move2.Item2;
+
+                    newBoard[y, x].Add(picked[0]);
+                    picked.RemoveAt(0);
+                }
+            }
+
         }
 
-        private int Evaluate(List<Stone>[,] newBoard)
+        private int Evaluate(List<Stone>[,] newBoard, int p1_sisaCaps, int p2_sisaCaps)
         {
             int flatCountScore = 0;
             int wallScore = 0;
-            int capstoneScore = 1 - p2_capstones;
             int stackHeightScore = 0;
             int roadThicknessScore = 0;
             int centerControlScore = 0;
@@ -955,7 +1176,7 @@ namespace TAK
                 }
             }
 
-            int totalScore = 3 * flatCountScore + 6 * capstoneScore + 2 * wallScore +
+            int totalScore = 3 * flatCountScore + 2 * wallScore +
                              2 * stackHeightScore + 2 * roadThicknessScore +
                              4 * centerControlScore + 3 * blockadeScore + 5 * boardStructure;
 
