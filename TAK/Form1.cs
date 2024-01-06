@@ -6,6 +6,7 @@ using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
@@ -720,6 +721,8 @@ namespace TAK
 
                     ActionClicking(move.Item1, move.Item2);
 
+                    p1_caps = false;
+                    p1_stand = false;
                     p2_caps = false;
                     p2_stand = false;
                 }
@@ -846,7 +849,7 @@ namespace TAK
                                     {
                                         Stone topBoard = newBoard[y - j, x][newBoard[y - j, x].Count - 1];
                                         Stone curBoard = stacked[stacked.Count - height];
-                                        if (!topBoard.Caps || !topBoard.Stand || (topBoard.Stand && curBoard.Caps))
+                                        if (!topBoard.Caps && (!topBoard.Stand || curBoard.Caps))
                                         {
                                             inside.Add((y - j, x, "pick"));
                                             height--;
@@ -854,16 +857,17 @@ namespace TAK
                                         else
                                             gas = false;
                                     }
-                                    //else {
-                                    //    inside.Add((y - j, x, "pick"));
-                                    //    height--;
-                                    //}
+                                    else
+                                    {
+                                        inside.Add((y - j, x, "pick"));
+                                        height--;
+                                    }
                                 }
                                 if (gas) moves.Add(inside);
                             }
                         }
 
-                        // Buttom
+                        // Bottom
                         inside = new List<(int, int, string)> { (y, x, "pick") };
                         height = newBoard[y, x].Count;
                         if (allPlaces[i].Count <= bottom)
@@ -877,7 +881,7 @@ namespace TAK
                                     {
                                         Stone bottomBoard = newBoard[y + j, x][newBoard[y + j, x].Count - 1];
                                         Stone curBoard = stacked[stacked.Count - height];
-                                        if (!bottomBoard.Caps || !bottomBoard.Stand || (bottomBoard.Stand && curBoard.Caps))
+                                        if (!bottomBoard.Caps && (!bottomBoard.Stand || curBoard.Caps))
                                         {
                                             inside.Add((y + j, x, "pick"));
                                             height--;
@@ -885,11 +889,11 @@ namespace TAK
                                         else
                                             gas = false;
                                     }
-                                    //else
-                                    //{
-                                    //    inside.Add((y + j, x, "pick"));
-                                    //    height--;
-                                    //}
+                                    else
+                                    {
+                                        inside.Add((y + j, x, "pick"));
+                                        height--;
+                                    }
                                 }
                                 if (gas) moves.Add(inside);
                             }
@@ -909,7 +913,7 @@ namespace TAK
                                     {
                                         Stone leftBoard = newBoard[y, x - 1][newBoard[y, x - 1].Count - 1];
                                         Stone curBoard = stacked[stacked.Count - height];
-                                        if (!leftBoard.Caps || !leftBoard.Stand || (leftBoard.Stand && curBoard.Caps))
+                                        if (!leftBoard.Caps && (!leftBoard.Stand || curBoard.Caps))
                                         {
                                             inside.Add((y, x - 1, "pick"));
                                             height--;
@@ -917,10 +921,11 @@ namespace TAK
                                         else
                                             gas = false;
                                     }
-                                    //else {
-                                    //    inside.Add((y, x - 1, "pick"));
-                                    //    height--;
-                                    //}
+                                    else
+                                    {
+                                        inside.Add((y, x - 1, "pick"));
+                                        height--;
+                                    }
                                 }
                                 if (gas) moves.Add(inside);
                             }
@@ -940,7 +945,7 @@ namespace TAK
                                     {
                                         Stone rightBoard = newBoard[y, x + 1][newBoard[y, x + 1].Count - 1];
                                         Stone curBoard = stacked[stacked.Count - height];
-                                        if (!rightBoard.Caps || !rightBoard.Stand || (rightBoard.Stand && curBoard.Caps))
+                                        if (!rightBoard.Caps && (!rightBoard.Stand || curBoard.Caps))
                                         {
                                             inside.Add((y, x + 1, "pick"));
                                             height--;
@@ -948,10 +953,11 @@ namespace TAK
                                         else
                                             gas = false;
                                     }
-                                    //else {
-                                    //    inside.Add((y, x + 1, "pick"));
-                                    //    height--;
-                                    //}
+                                    else
+                                    {
+                                        inside.Add((y, x + 1, "pick"));
+                                        height--;
+                                    }
                                 }
                                 if (gas) moves.Add(inside);
                             }
@@ -959,7 +965,6 @@ namespace TAK
                     }
                 }
             }
-
             return moves;
         }
 
@@ -1079,7 +1084,7 @@ namespace TAK
 
         private void MakeMove(ref List<Stone>[,] newBoard, List<(int, int, string)> moves, int player, ref int p1_sisaStone, ref int p1_sisaCaps, ref int p2_sisaStone, ref int p2_sisaCaps)
         {
-            if (moves.Count == 1)
+            if (moves.Count == 1 && moves[0].Item3 != "pick")
             {
                 (int, int, string) move = moves[0];
                 int y = move.Item1;
@@ -1102,7 +1107,7 @@ namespace TAK
                     if (player == 1) p1_sisaCaps--; else if (player == 2) p2_sisaCaps--;
                 }
             }
-            else if (moves.Count > 1)
+            else if (moves.Count > 1 && moves[0].Item3 == "pick")
             {
                 (int, int, string) move = moves[0];
                 int y = move.Item1;
@@ -1129,56 +1134,57 @@ namespace TAK
                     picked.RemoveAt(0);
                 }
             }
-
         }
 
         private int Evaluate(List<Stone>[,] newBoard, int p1_sisaCaps, int p2_sisaCaps)
         {
             int flatCountScore = 0;
             int wallScore = 0;
+            //int capstoneScore = p2_sisaCaps;
             int stackHeightScore = 0;
             int roadThicknessScore = 0;
             int centerControlScore = 0;
             int blockadeScore = 0;
             int boardStructure = 0;
 
-            for (int y = 0; y < 6; y++)
+            for (int ij = 0; ij < 6 * 6; ij++)
             {
-                for (int x = 0; x < 6; x++)
+                int y = ij / 6;
+                int x = ij % 6;
+
+                var currentCell = newBoard[y, x];
+
+                if (currentCell.Count > 0 && currentCell[currentCell.Count - 1].Player == 2)
                 {
-                    var currentCell = newBoard[y, x];
+                    var currentStone = currentCell[currentCell.Count - 1];
 
-                    if (currentCell.Count > 0 && currentCell[currentCell.Count - 1].Player == 2)
+                    if (!currentStone.Stand)
+                        flatCountScore++;
+                    else
+                        wallScore++;
+
+                    stackHeightScore = currentCell.Count;
+
+                    if (IsPlayerStone(newBoard, y, x, 2))
                     {
-                        var currentStone = currentCell[currentCell.Count - 1];
+                        UpdateRoadThickness(newBoard, y, x, ref roadThicknessScore);
 
-                        if (!currentStone.Stand)
-                            flatCountScore++;
-                        else
-                            wallScore++;
+                        if (IsWithinCenter(y, x))
+                            centerControlScore++;
 
-                        stackHeightScore = currentCell.Count;
+                        if (ContributesToBlockade(newBoard, y, x, 2))
+                            blockadeScore++;
 
-                        if (IsPlayerStone(newBoard, y, x, 2))
-                        {
-                            UpdateRoadThickness(newBoard, y, x, ref roadThicknessScore);
-
-                            if (IsWithinCenter(y, x))
-                                centerControlScore++;
-
-                            if (ContributesToBlockade(newBoard, y, x, 2))
-                                blockadeScore++;
-
-                            if (ContributesToBoardStructure(newBoard, y, x, 2))
-                                boardStructure++;
-                        }
+                        if (ContributesToBoardStructure(newBoard, y, x, 2))
+                            boardStructure++;
                     }
                 }
             }
 
-            int totalScore = 3 * flatCountScore + 2 * wallScore +
-                             2 * stackHeightScore + 2 * roadThicknessScore +
-                             4 * centerControlScore + 3 * blockadeScore + 5 * boardStructure;
+            int totalScore = 3 * flatCountScore + 2 * wallScore + 
+                             //3 * capstoneScore +
+                             2 * stackHeightScore + 3 * roadThicknessScore +
+                             4 * centerControlScore + 4 * blockadeScore + 5 * boardStructure;
 
             CheckWin();
             if (p2_win)
@@ -1262,6 +1268,5 @@ namespace TAK
 
             return count;
         }
-
     }
 }
