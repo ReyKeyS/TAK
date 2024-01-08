@@ -143,7 +143,7 @@ namespace TAK
                 }
                 else
                 {
-                    if (board[y, x][board[y, x].Count - 1].Player == whosTurn && !earlyStep_p1 && !earlyStep_p2 && !board[y, x][board[y, x].Count - 1].Stand)
+                    if (board[y, x][board[y, x].Count - 1].Player == whosTurn && !earlyStep_p1 && !earlyStep_p2)
                     {
                         btnPicked = new List<Button>();
                         // Get Stacked Stone
@@ -187,10 +187,6 @@ namespace TAK
                         }
                         // Reset btn Capstone
                         if (map[y, x].FlatStyle == FlatStyle.Flat) map[y, x].FlatStyle = FlatStyle.Standard;
-                    }
-                    else if (board[y, x][board[y, x].Count - 1].Stand)
-                    {
-                        MessageBox.Show("Stand can't be picked up!");
                     }
                     else MessageBox.Show("Not Yours");
                 }
@@ -845,11 +841,11 @@ namespace TAK
                         };
                         moves.Add(inside);
 
-                        //inside = new List<(int, int, string)>
-                        //{
-                        //    (y, x, "stand")
-                        //};
-                        //moves.Add(inside);
+                        inside = new List<(int, int, string)>
+                        {
+                            (y, x, "stand")
+                        };
+                        moves.Add(inside);
                     }
                     // Chance place Capstone
                     if ((player == 1 && p1_sisaCaps > 0) || (player == 2 && p2_sisaCaps > 0))
@@ -861,7 +857,7 @@ namespace TAK
                         moves.Add(inside);
                     }
                 }
-                else if (newBoard[y, x].Count > 0 && newBoard[y, x][newBoard[y, x].Count - 1].Player == player && !newBoard[y, x][newBoard[y, x].Count - 1].Stand)
+                else if (newBoard[y, x].Count > 0 && newBoard[y, x][newBoard[y, x].Count - 1].Player == player)
                 {
                     // Pick Up
                     List<Stone> stacked = newBoard[y, x];
@@ -1203,8 +1199,8 @@ namespace TAK
 
                     if (!currentStone.Stand)
                         flatCountScore++;
-                    else
-                        wallScore++;
+                    //else
+                    //    wallScore++;
 
                     stackHeightScore = currentCell.Count;
 
@@ -1224,8 +1220,8 @@ namespace TAK
                 }
             }
 
-            int totalScore = 3 * flatCountScore + 2 * wallScore +
-                             1 * capstoneScore +
+            int totalScore = 3 * flatCountScore + 
+                             //1 * capstoneScore + 2 * wallScore +
                              2 * stackHeightScore + 2 * roadThicknessScore +
                              4 * centerControlScore + 3 * blockadeScore + 5 * boardStructure;
 
