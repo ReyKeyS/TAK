@@ -560,7 +560,8 @@ namespace TAK
 
             bool win = false;
             // Rows & Columns
-            if (p1_win) { timerAI.Stop(); MessageBox.Show("Player 1 Win"); win = true; }
+            if (p1_win && p2_win) { timerAI.Stop(); MessageBox.Show("TIE"); win = true; }
+            else if (p1_win) { timerAI.Stop(); MessageBox.Show("Player 1 Win "); win = true; }
             else if (p2_win) { timerAI.Stop(); MessageBox.Show("Player 2 Win"); win = true; }
 
             if (win)
@@ -583,46 +584,89 @@ namespace TAK
 
         public void CheckWin()
         {
-            for (int whosTurn = 1; whosTurn <= 2; whosTurn++)
+            bool gas = true;
+            for (int i = 0; i < 6*6; i++)
             {
-                // Atas
-                List<int> startStoneTop = new List<int>();
-                for (int x = 0; x < 6; x++)
-                {
-                    if (board[0, x].Count > 0 && board[0, x][board[0, x].Count - 1].Player == whosTurn && !board[0, x][board[0, x].Count - 1].Stand)
-                    {
-                        startStoneTop.Add(x);
-                    }
-                }
-                foreach (int sX in startStoneTop)
-                {
-                    List<(int, int)> stepped = new List<(int, int)>();
-                    stepped.Add((0, sX));
-                    if (whosTurn == 1 && !p1_win)
-                        RecursiveVertical(0, sX, -1, -1, whosTurn, stepped);
-                    if (whosTurn == 2 && !p2_win)
-                        RecursiveVertical(0, sX, -1, -1, whosTurn, stepped);
-                }
 
-                // Kiri
-                List<int> startStoneLeft = new List<int>();
-                for (int y = 0; y < 6; y++)
+                int y = i / 6;
+                int x = i % 6;
+
+                if (board[y,x].Count < 1)
                 {
-                    if (board[y, 0].Count > 0 && board[y, 0][board[y, 0].Count - 1].Player == whosTurn && !board[y, 0][board[y, 0].Count - 1].Stand)
-                    {
-                        startStoneLeft.Add(y);
-                    }
-                }
-                foreach (int sY in startStoneLeft)
-                {
-                    List<(int, int)> stepped = new List<(int, int)>();
-                    stepped.Add((sY, 0));
-                    if (whosTurn == 1 && !p1_win)
-                        RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
-                    if (whosTurn == 2 && !p2_win)
-                        RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
+                    gas = false;
                 }
             }
+            if (gas)
+            {
+                int jumlahPlayer1 = 0;
+                int jumlahPlayer2 = 0;
+                for (int i = 0; i < 6 * 6; i++)
+                {
+
+                    int y = i / 6;
+                    int x = i % 6;
+
+                    if (board[y, x][board[y,x].Count-1].Player==1 && !board[y, x][board[y, x].Count - 1].Stand && !board[y, x][board[y, x].Count - 1].Caps)
+                        jumlahPlayer1++;
+                    if (board[y, x][board[y, x].Count - 1].Player == 2 && !board[y, x][board[y, x].Count - 1].Stand && !board[y, x][board[y, x].Count - 1].Caps)
+                        jumlahPlayer2++;
+
+                }
+                if (jumlahPlayer1>jumlahPlayer2)
+                    p1_win = true;
+                else if (jumlahPlayer1 < jumlahPlayer2)
+                    p2_win = true;
+                
+                else if (jumlahPlayer1 == jumlahPlayer2)
+                {
+                    p1_win = true;
+                    p2_win = true;
+                }
+            }
+            else
+            {
+                for (int whosTurn = 1; whosTurn <= 2; whosTurn++)
+                {
+                    // Atas
+                    List<int> startStoneTop = new List<int>();
+                    for (int x = 0; x < 6; x++)
+                    {
+                        if (board[0, x].Count > 0 && board[0, x][board[0, x].Count - 1].Player == whosTurn && !board[0, x][board[0, x].Count - 1].Stand)
+                        {
+                            startStoneTop.Add(x);
+                        }
+                    }
+                    foreach (int sX in startStoneTop)
+                    {
+                        List<(int, int)> stepped = new List<(int, int)>();
+                        stepped.Add((0, sX));
+                        if (whosTurn == 1 && !p1_win)
+                            RecursiveVertical(0, sX, -1, -1, whosTurn, stepped);
+                        if (whosTurn == 2 && !p2_win)
+                            RecursiveVertical(0, sX, -1, -1, whosTurn, stepped);
+                    }
+
+                    // Kiri
+                    List<int> startStoneLeft = new List<int>();
+                    for (int y = 0; y < 6; y++)
+                    {
+                        if (board[y, 0].Count > 0 && board[y, 0][board[y, 0].Count - 1].Player == whosTurn && !board[y, 0][board[y, 0].Count - 1].Stand)
+                        {
+                            startStoneLeft.Add(y);
+                        }
+                    }
+                    foreach (int sY in startStoneLeft)
+                    {
+                        List<(int, int)> stepped = new List<(int, int)>();
+                        stepped.Add((sY, 0));
+                        if (whosTurn == 1 && !p1_win)
+                            RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
+                        if (whosTurn == 2 && !p2_win)
+                            RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
+                    }
+                }
+            }
+            
         }
 
         public void RecursiveVertical(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped)
@@ -803,11 +847,11 @@ namespace TAK
                         };
                         moves.Add(inside);
 
-                        inside = new List<(int, int, string)>
-                        {
-                            (y, x, "stand")
-                        };
-                        moves.Add(inside);
+                        //inside = new List<(int, int, string)>
+                        //{
+                        //    (y, x, "stand")
+                        //};
+                        //moves.Add(inside);
                     }
                     // Chance place Capstone
                     if ((player == 1 && p1_sisaCaps > 0) || (player == 2 && p2_sisaCaps > 0))
@@ -1031,10 +1075,10 @@ namespace TAK
                         newBoard[nRow, nCol] = new List<Stone>(prevBoard[nRow, nCol]);
                     }
 
-                    int p1_sisaStone_rec = p1_stones;
-                    int p1_sisaCaps_rec = p1_capstones;
-                    int p2_sisaStone_rec = p2_stones;
-                    int p2_sisaCaps_rec = p2_capstones;
+                    int p1_sisaStone_rec = p1_sisaStone;
+                    int p1_sisaCaps_rec = p1_sisaCaps;
+                    int p2_sisaStone_rec = p2_sisaStone;
+                    int p2_sisaCaps_rec = p2_sisaCaps;
 
                     MakeMove(ref newBoard, moves, 2, ref p1_sisaStone_rec, ref p1_sisaCaps_rec, ref p2_sisaStone_rec, ref p2_sisaCaps_rec);
 
@@ -1063,10 +1107,10 @@ namespace TAK
                         newBoard[nRow, nCol] = new List<Stone>(prevBoard[nRow, nCol]);
                     }
 
-                    int p1_sisaStone_rec = p1_stones;
-                    int p1_sisaCaps_rec = p1_capstones;
-                    int p2_sisaStone_rec = p2_stones;
-                    int p2_sisaCaps_rec = p2_capstones;
+                    int p1_sisaStone_rec = p1_sisaStone;
+                    int p1_sisaCaps_rec = p1_sisaCaps;
+                    int p2_sisaStone_rec = p2_sisaStone;
+                    int p2_sisaCaps_rec = p2_sisaCaps;
 
                     MakeMove(ref newBoard, moves, 1, ref p1_sisaStone_rec, ref p1_sisaCaps_rec, ref p2_sisaStone_rec, ref p2_sisaCaps_rec);
 
@@ -1140,7 +1184,7 @@ namespace TAK
         {
             int flatCountScore = 0;
             int wallScore = 0;
-            //int capstoneScore = p2_sisaCaps;
+            int capstoneScore = p2_sisaCaps;
             int stackHeightScore = 0;
             int roadThicknessScore = 0;
             int centerControlScore = 0;
@@ -1181,20 +1225,20 @@ namespace TAK
                 }
             }
 
-            int totalScore = 3 * flatCountScore + 2 * wallScore + 
-                             //3 * capstoneScore +
+            int totalScore = 3 * flatCountScore + 2 * wallScore +
+                             3 * capstoneScore +
                              2 * stackHeightScore + 3 * roadThicknessScore +
                              4 * centerControlScore + 4 * blockadeScore + 5 * boardStructure;
 
             CheckWin();
             if (p2_win)
             {
-                totalScore += 1000;
+                totalScore += 10000;
                 p2_win = false;
             }
             if (p1_win)
             {
-                totalScore -= 1000;
+                totalScore -= 10000;
                 p1_win = false;
             }
 
