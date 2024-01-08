@@ -556,7 +556,7 @@ namespace TAK
         public bool CheckWinning()
         {
             if (!earlyStep_p1 && !earlyStep_p2)
-                CheckWin();
+                CheckWin(board);
 
             bool win = false;
             // Rows & Columns
@@ -582,16 +582,16 @@ namespace TAK
             return win;
         }
 
-        public void CheckWin()
+        private void CheckWin(List<Stone>[,] board)
         {
             bool gas = true;
-            for (int i = 0; i < 6*6; i++)
+            for (int i = 0; i < 6 * 6; i++)
             {
 
                 int y = i / 6;
                 int x = i % 6;
 
-                if (board[y,x].Count < 1)
+                if (board[y, x].Count < 1)
                 {
                     gas = false;
                 }
@@ -602,15 +602,13 @@ namespace TAK
                 int jumlahPlayer2 = 0;
                 for (int i = 0; i < 6 * 6; i++)
                 {
-
                     int y = i / 6;
                     int x = i % 6;
 
-                    if (board[y, x][board[y,x].Count-1].Player==1 && !board[y, x][board[y, x].Count - 1].Stand && !board[y, x][board[y, x].Count - 1].Caps)
+                    if (board[y, x][board[y, x].Count - 1].Player == 1 && !board[y, x][board[y, x].Count - 1].Stand && !board[y, x][board[y, x].Count - 1].Caps)
                         jumlahPlayer1++;
                     if (board[y, x][board[y, x].Count - 1].Player == 2 && !board[y, x][board[y, x].Count - 1].Stand && !board[y, x][board[y, x].Count - 1].Caps)
                         jumlahPlayer2++;
-
                 }
                 if (jumlahPlayer1>jumlahPlayer2)
                     p1_win = true;
@@ -641,9 +639,9 @@ namespace TAK
                         List<(int, int)> stepped = new List<(int, int)>();
                         stepped.Add((0, sX));
                         if (whosTurn == 1 && !p1_win)
-                            RecursiveVertical(0, sX, -1, -1, whosTurn, stepped);
+                            RecursiveVertical(0, sX, -1, -1, whosTurn, stepped, board);
                         if (whosTurn == 2 && !p2_win)
-                            RecursiveVertical(0, sX, -1, -1, whosTurn, stepped);
+                            RecursiveVertical(0, sX, -1, -1, whosTurn, stepped, board);
                     }
 
                     // Kiri
@@ -660,16 +658,16 @@ namespace TAK
                         List<(int, int)> stepped = new List<(int, int)>();
                         stepped.Add((sY, 0));
                         if (whosTurn == 1 && !p1_win)
-                            RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
+                            RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped, board);
                         if (whosTurn == 2 && !p2_win)
-                            RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped);
+                            RecursiveHorizontal(sY, 0, -1, -1, whosTurn, stepped, board);
                     }
                 }
             }
             
         }
 
-        public void RecursiveVertical(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped)
+        private void RecursiveVertical(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped, List<Stone>[,] board)
         {
             if (y == 5)
             {
@@ -683,16 +681,16 @@ namespace TAK
                 int[] nextX = { 0, -1, 1, 0 };
                 for (int i = 0; i < 4; i++)
                 {
-                    if (ValidColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped))
+                    if (ValidColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped, board))
                     {
                         stepped.Add((y + nextY[i], x + nextX[i]));
-                        RecursiveVertical(y + nextY[i], x + nextX[i], y, x, whosTurn, stepped);
+                        RecursiveVertical(y + nextY[i], x + nextX[i], y, x, whosTurn, stepped, board);
                     }
                 }
             }
         }
 
-        public void RecursiveHorizontal(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped)
+        private void RecursiveHorizontal(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped, List<Stone>[,] board)
         {
             if (x == 5)
             {
@@ -706,16 +704,16 @@ namespace TAK
                 int[] nextX = { -1, 0, 0, 1 };
                 for (int i = 0; i < 4; i++)
                 {
-                    if (ValidColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped))
+                    if (ValidColor(y + nextY[i], x + nextX[i], before_y, before_x, whosTurn, stepped, board))
                     {
                         stepped.Add((y + nextY[i], x + nextX[i]));
-                        RecursiveHorizontal(y + nextY[i], x + nextX[i], y, x, whosTurn, stepped);
+                        RecursiveHorizontal(y + nextY[i], x + nextX[i], y, x, whosTurn, stepped, board);
                     }
                 }
             }
         }
 
-        public bool ValidColor(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped)
+        private bool ValidColor(int y, int x, int before_y, int before_x, int whosTurn, List<(int, int)> stepped, List<Stone>[,] board)
         {
             if (y == before_y && x == before_x) return false;
 
@@ -1047,7 +1045,7 @@ namespace TAK
 
         private int MinimaxWithAlphaBeta(List<Stone>[,] prevBoard, int depth, bool maximizingPlayer, int alpha, int beta, int p1_sisaStone, int p1_sisaCaps, int p2_sisaStone, int p2_sisaCaps)
         {
-            CheckWin();
+            CheckWin(prevBoard);
             if (p1_win || p2_win)
             {
                 p1_win = false;
@@ -1227,19 +1225,19 @@ namespace TAK
             }
 
             int totalScore = 3 * flatCountScore + 2 * wallScore +
-                             3 * capstoneScore +
-                             2 * stackHeightScore + 3 * roadThicknessScore +
-                             4 * centerControlScore + 4 * blockadeScore + 5 * boardStructure;
+                             1 * capstoneScore +
+                             2 * stackHeightScore + 2 * roadThicknessScore +
+                             4 * centerControlScore + 3 * blockadeScore + 5 * boardStructure;
 
-            CheckWin();
+            CheckWin(newBoard);
             if (p2_win)
             {
-                totalScore += 10000;
+                totalScore += 100000;
                 p2_win = false;
             }
             if (p1_win)
             {
-                totalScore -= 10000;
+                totalScore -= 100000;
                 p1_win = false;
             }
 
