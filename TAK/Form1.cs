@@ -901,11 +901,11 @@ namespace TAK
                                         else
                                             gas = false;
                                     }
-                                    else
-                                    {
-                                        inside.Add((y - j, x, "pick"));
-                                        height--;
-                                    }
+                                    //else
+                                    //{
+                                    //    inside.Add((y - j, x, "pick"));
+                                    //    height--;
+                                    //}
                                 }
                                 if (gas) moves.Add(inside);
                             }
@@ -933,11 +933,11 @@ namespace TAK
                                         else
                                             gas = false;
                                     }
-                                    else
-                                    {
-                                        inside.Add((y + j, x, "pick"));
-                                        height--;
-                                    }
+                                    //else
+                                    //{
+                                    //    inside.Add((y + j, x, "pick"));
+                                    //    height--;
+                                    //}
                                 }
                                 if (gas) moves.Add(inside);
                             }
@@ -965,11 +965,11 @@ namespace TAK
                                         else
                                             gas = false;
                                     }
-                                    else
-                                    {
-                                        inside.Add((y, x - 1, "pick"));
-                                        height--;
-                                    }
+                                    //else
+                                    //{
+                                    //    inside.Add((y, x - 1, "pick"));
+                                    //    height--;
+                                    //}
                                 }
                                 if (gas) moves.Add(inside);
                             }
@@ -997,11 +997,11 @@ namespace TAK
                                         else
                                             gas = false;
                                     }
-                                    else
-                                    {
-                                        inside.Add((y, x + 1, "pick"));
-                                        height--;
-                                    }
+                                    //else
+                                    //{
+                                    //    inside.Add((y, x + 1, "pick"));
+                                    //    height--;
+                                    //}
                                 }
                                 if (gas) moves.Add(inside);
                             }
@@ -1128,7 +1128,7 @@ namespace TAK
 
         private void MakeMove(ref List<Stone>[,] newBoard, List<(int, int, string)> moves, int player, ref int p1_sisaStone, ref int p1_sisaCaps, ref int p2_sisaStone, ref int p2_sisaCaps)
         {
-            if (moves.Count == 1 && moves[0].Item3 != "pick")
+            if (moves.Count == 1 )
             {
                 (int, int, string) move = moves[0];
                 int y = move.Item1;
@@ -1159,6 +1159,7 @@ namespace TAK
 
                 int awalIdx = 0;
                 if (newBoard[y, x].Count > 6) awalIdx = newBoard[y, x].Count - 6;
+                picked.Clear();
                 for (int i = awalIdx; i < newBoard[y, x].Count; i++)
                 {
                     picked.Add(newBoard[y, x][i]);
@@ -1311,6 +1312,17 @@ namespace TAK
             }
 
             return count;
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.A)
+            {
+                if (timerAI.Enabled)
+                    timerAI.Stop();
+                else
+                    timerAI.Start();
+            }
         }
     }
 }
